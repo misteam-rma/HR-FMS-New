@@ -693,11 +693,7 @@ const AfterLeavingWork = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-600 font-bold">{item.noDues || '-'}</td>
                               </>
                             )}
-                            {activeTab === "history" && (
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-green-600 font-bold">
-                                {item.actual ? new Date(item.actual).toLocaleDateString('en-GB') : '-'}
-                              </td>
-                            )}
+                           
                           </tr>
                         ))
                       )}

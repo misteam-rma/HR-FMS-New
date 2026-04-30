@@ -14,6 +14,8 @@ import Employee from './pages/admin/Employee';
 import MyProfile from './pages/user/MyProfile';
 import MyAttendance from './pages/user/MyAttendance';
 import LeaveRequest from './pages/user/LeaveRequest';
+import Feedback from './pages/user/Feedback';
+import NOC from './pages/user/NOC';
 import CompanyCalendar from './pages/CompanyCalendar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Attendance from './pages/admin/Attendance';
@@ -56,6 +58,8 @@ function App() {
             <Route path="attendance/monthly" element={<Attendance />} />
             <Route path="reimbursement" element={<Reimbursement />} />
             <Route path="leave-request" element={<LeaveRequest />} />
+            <Route path="noc" element={<NOC />} />
+            <Route path="feedback" element={<Feedback />} />
             <Route path="company-calendar" element={<CompanyCalendar />} />
             <Route path="leave-management" element={<LeaveManagement />} />
             <Route path="admin-attendance" element={<AdminAttendance />} />

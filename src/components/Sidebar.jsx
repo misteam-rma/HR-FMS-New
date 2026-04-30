@@ -25,7 +25,8 @@ import {
   Settings,
   Bell,
   Clock,
-  IndianRupee
+  IndianRupee,
+  MessageSquare
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -91,6 +92,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     },
     { path: '/reimbursement', icon: IndianRupee, label: 'Reimbursement' },
     { path: '/leave-management', icon: BookPlus, label: 'Leave Mgmt' },
+    { path: '/noc', icon: FileText, label: '108 NOC' },
+    { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
   ];
@@ -101,6 +104,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/my-attendance', icon: Clock, label: 'My Attendance' },
     { path: '/reimbursement', icon: IndianRupee, label: 'Reimbursement' },
     { path: '/leave-request', icon: LeaveIcon, label: 'Leave Request' },
+    { path: '/noc', icon: FileText, label: '108 NOC' },
+    { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
   ];

@@ -237,12 +237,7 @@ const Login = () => {
             </div>
           </form>
 
-          {/* Footer */}
-          <div className="pt-10 text-center">
-            <p className="text-xs text-gray-400 font-medium">
-              Powered By <span className="text-indigo-600 hover:underline cursor-pointer">Botivate</span>
-            </p>
-          </div>
+        
         </div>
       </div>
     </div>

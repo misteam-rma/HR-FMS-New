@@ -698,35 +698,7 @@ const LeaveRequest = () => {
         </div>
       </div>
 
-      {/* Modern Leave Statistics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {[
-          { label: "Casual", taken: leaveStats.casualLeave, total: 6, color: "indigo" },
-          { label: "Earned", taken: leaveStats.earnedLeave, total: 12, color: "emerald" },
-          { label: "Sick", taken: leaveStats.sickLeave, total: 6, color: "rose" },
-          { label: "Restricted", taken: leaveStats.restrictedHoliday, total: 2, color: "amber" }
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
-            <p className={`text-[11px] font-bold text-slate-400 uppercase tracking-widest`}>{stat.label}</p>
-            <div className="flex items-end gap-1 mt-2 mb-3">
-              <span className={`text-3xl font-black text-${stat.color}-600 leading-none`}>{stat.taken}</span>
-              <span className="text-sm text-slate-300 font-bold mb-1">/ {stat.total}</span>
-            </div>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-               <div 
-                className={`h-full bg-${stat.color}-500 rounded-full transition-all`} 
-                style={{ width: `${Math.min(100, (stat.taken / stat.total) * 100)}%` }}
-              ></div>
-            </div>
-            <p className="text-[10px] text-slate-500 font-bold mt-2 uppercase tracking-widest">Left: {Math.max(0, stat.total - stat.taken)} Days</p>
-          </div>
-        ))}
-        <div className="bg-slate-900 p-5 rounded-3xl shadow-lg shadow-slate-200 col-span-2 md:col-span-4 lg:col-span-1 flex flex-col justify-center">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Total Approved</p>
-          <p className="text-4xl font-black text-white mt-1">{leaveStats.totalLeave}</p>
-          <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-widest">Current Year</p>
-        </div>
-      </div>
+    
 
            {/* Main Table Container */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">

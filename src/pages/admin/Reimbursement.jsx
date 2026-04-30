@@ -54,17 +54,14 @@ const Reimbursement = () => {
         
         // Skip header row
         rawData.slice(1).forEach(row => {
-          // Pair 1: Code (J/9), Name (I/8)
-          const code1 = row[9]?.toString().trim();
-          const name1 = row[8]?.toString().trim();
-          if (code1) combinedArticles.push({ code: code1, name: name1 || code1 });
+          // Fetch only from Column L (index 11) for Code and Column K (index 10) for Name
+          const code = row[11]?.toString().trim();
+          const name = row[10]?.toString().trim();
+          if (code) {
+            combinedArticles.push({ code, name: name || code });
+          }
 
-          // Pair 2: Code (L/11), Name (K/10)
-          const code2 = row[11]?.toString().trim();
-          const name2 = row[10]?.toString().trim();
-          if (code2) combinedArticles.push({ code: code2, name: name2 || code2 });
-
-          // Places logic: Column F (5) for Name, Column G (6) for KM
+          // Places logic: Column G (6) for Name, Column H (7) for KM
           const placeName = row[6]?.toString().trim();
           const placeKm = row[7]?.toString().trim();
           if (placeName) {
@@ -188,81 +185,83 @@ const Reimbursement = () => {
       const fetchResult = await fetchResponse.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
       
-      let maxSerial = 0;
+      let maxSerialNum = 0;
       if (Array.isArray(existingData) && existingData.length > 1) {
           const rows = existingData.slice(6);
           rows.forEach(row => {
-              const sn = parseInt(row[1]); // Serial no is index 1 (Column B)
-              if (!isNaN(sn) && sn > maxSerial) maxSerial = sn;
+              const snString = row[1]?.toString() || '';
+              const match = snString.match(/R-(\d+)/) || snString.match(/(\d+)/);
+              if (match) {
+                  const sn = parseInt(match[1]);
+                  if (!isNaN(sn) && sn > maxSerialNum) maxSerialNum = sn;
+              }
           });
       }
-      const nextSerial = maxSerial + 1;
 
-      // 2. Prepare data
-      const now = new Date();
-      const timestamp = now.toLocaleString();
-      const totalKm = calculateTotalKm();
-      const totalAmount = calculateTotalAmount();
-      
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : {};
-
-      // Combine multiple visits into strings for the sheet
-      const visitAddresses = formData.visits.map(v => v.place).filter(Boolean).join(' | ');
-      const visitDates = formData.visits.map(v => v.date).filter(Boolean).join(' | ');
-
-      // Find employee type from articleList
       const article = articleList.find(a => a.code === formData.articleCode);
       const empType = article?.type || 'Field Staff';
+      const now = new Date();
+      const timestamp = now.toLocaleString();
+      const rateNum = parseFloat(formData.ratePerKm) || 0;
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          action: 'insert',
-          sheetName: 'Reimbursment',
-          rowData: JSON.stringify([
-            timestamp,              // A: Timestamp
-            nextSerial,             // B: Serial No
-            formData.billMonth,     // C: Form Date
-            empType,                // D: Employee Type
-            currentUser.Code || '', // E: Employee Code
-            currentUser.Name || '', // F: Employee Name
-            formData.vehicleType,   // G: Vehical Type
-            formData.ratePerKm,     // H: Rate Per KM
-            visitAddresses,         // I: Visit Address
-            visitDates,             // J: Visit Date
-            formData.articleCode,   // K: Senior Code (Article Code)
-            formData.articleName,   // L: Senior Name (Article Name)
-            formData.notes,         // M: Note
-            totalKm,                // N: Total KM
-            totalAmount,            // O: Total Price
-            '',                     // P: Planned
-            '',                     // Q: Actual
-            '',                     // R: Delays
-            'Pending',              // S: Status
-            ''                      // T: Remarks
-          ])
-        })
-      });
+      // Submit each visit as a separate row
+      for (let i = 0; i < formData.visits.length; i++) {
+        const visit = formData.visits[i];
+        const nextSerialNum = maxSerialNum + 1 + i;
+        const formattedSerial = `R-${String(nextSerialNum).padStart(3, '0')}`;
+        const visitKm = parseFloat(visit.km) || 0;
+        const visitAmount = visitKm * rateNum;
 
-      const result = await response.json();
-      if (result.success) {
-        toast.success("Reimbursement claim submitted!");
-        setIsModalOpen(false);
-        fetchReimbursementLogs();
-        setFormData({
-          billMonth: new Date().toISOString().substring(0, 7),
-          articleCode: '',
-          articleName: '',
-          vehicleType: '2 Wheeler',
-          ratePerKm: '3.5',
-          visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
-          notes: ''
+        const rowData = [
+          timestamp,              // A: Timestamp
+          formattedSerial,        // B: Serial No
+          formData.billMonth,     // C: Form Date
+          empType,                // D: Employee Type
+          currentUser.Code || '', // E: Employee Code
+          currentUser.Name || '', // F: Employee Name
+          formData.vehicleType,   // G: Vehical Type
+          formData.ratePerKm,     // H: Rate Per KM
+          visit.place,            // I: Visit Address (Individual)
+          visit.date,             // J: Visit Date (Individual)
+          formData.articleCode,   // K: Senior Code
+          formData.articleName,   // L: Senior Name
+          formData.notes,         // M: Note
+          visitKm,                // N: Total KM (Individual)
+          visitAmount,            // O: Total Price (Individual)
+          '',                     // P: Planned
+          '',                     // Q: Actual
+          '',                     // R: Delays
+          'Pending',              // S: Status
+          ''                      // T: Remarks
+        ];
+
+        const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            action: 'insert',
+            sheetName: 'Reimbursment',
+            rowData: JSON.stringify(rowData)
+          })
         });
-      } else {
-        throw new Error(result.error);
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || "Failed to insert row " + (i + 1));
       }
+
+      toast.success("Reimbursement claim submitted successfully!");
+      setIsModalOpen(false);
+      fetchReimbursementLogs();
+      setFormData({
+        billMonth: new Date().toISOString().substring(0, 7),
+        articleCode: '',
+        articleName: '',
+        vehicleType: '2 Wheeler',
+        ratePerKm: '3.5',
+        visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
+        notes: ''
+      });
     } catch (err) {
       toast.error("Submission failed: " + err.message);
     } finally {

@@ -15,6 +15,7 @@ const Joining = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [teamHeadList, setTeamHeadList] = useState([]);
 
   // Pagination states (Synced with CallTracker.jsx)
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,15 +99,17 @@ const Joining = () => {
     setTableLoading(true);
     setError(null);
     try {
-      const [enquiryResponse, followUpResponse, joiningHistoryResponse] = await Promise.all([
+      const [enquiryResponse, followUpResponse, joiningHistoryResponse, masterResponse] = await Promise.all([
         fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`),
         fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Follow - Up&action=fetch`),
         fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`),
+        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`),
       ]);
-      const [enquiryResult, followUpResult, joiningHistoryResult] = await Promise.all([
+      const [enquiryResult, followUpResult, joiningHistoryResult, masterResult] = await Promise.all([
         enquiryResponse.json(),
         followUpResponse.json(),
-        joiningHistoryResponse.json()
+        joiningHistoryResponse.json(),
+        masterResponse.json()
       ]);
 
       if (enquiryResult.success && followUpResult.success) {
@@ -119,23 +122,23 @@ const Joining = () => {
           id: row[getIndex("Timestamp")] || row[0] || "",
           indentNo: row[getIndex("Indent Number")] || row[1] || "",
           candidateEnquiryNo: row[getIndex("Candidate Enquiry Number")] || row[2] || "",
-          applyingForPost: row[getIndex("Applying For the Post")] || row[3] || "",
-          candidateName: row[getIndex("Candidate Name")] || row[4] || "",
-          candidateDOB: row[getIndex("DOB")] || row[5] || "",
-          candidatePhone: row[getIndex("Candidate Phone Number")] || row[6] || "",
-          candidateEmail: row[getIndex("Candidate Email")] || row[7] || "",
-          previousCompany: row[getIndex("Previous Company Name")] || row[8] || "",
-          jobExperience: row[getIndex("Job Experience")] || row[9] || "",
-          department: row[getIndex("Department")] || row[10] || "",
-          previousPosition: row[getIndex("Previous Position")] || row[11] || "",
-          reasonForLeaving: row[getIndex("Reason Of Leaving")] || row[12] || "",
-          maritalStatus: row[getIndex("Marital Status")] || row[13] || "",
-          lastSalary: row[getIndex("Last Salary Drawn")] || row[14] || "",
-          candidatePhoto: row[getIndex("Candidate Photo")] || row[15] || "",
-          referenceBy: row[getIndex("Reference By")] || row[16] || "",
-          presentAddress: row[getIndex("Present Address")] || row[17] || "",
-          aadharNo: row[getIndex("Aadhar Number")] || row[18] || "",
-          candidateResume: row[getIndex("Resume Copy")] || row[19] || "",
+          applyingForPost: row[getIndex("Applying For the Post")] || row[4] || "",
+          candidateName: row[getIndex("Candidate Name")] || row[6] || "",
+          candidateDOB: row[getIndex("DOB")] || row[7] || "",
+          candidatePhone: row[getIndex("Candidate Phone Number")] || row[8] || "",
+          candidateEmail: row[getIndex("Candidate Email")] || row[9] || "",
+          previousCompany: row[getIndex("Previous Company Name")] || row[10] || "",
+          jobExperience: row[getIndex("Job Experience")] || row[11] || "",
+          department: row[getIndex("Department")] || row[5] || "",
+          previousPosition: row[getIndex("Previous Position")] || row[12] || "",
+          reasonForLeaving: row[getIndex("Reason Of Leaving")] || row[13] || "",
+          maritalStatus: row[getIndex("Marital Status")] || row[14] || "",
+          lastSalary: row[getIndex("Last Salary Drawn")] || row[15] || "",
+          candidatePhoto: row[getIndex("Candidate Photo")] || row[16] || "",
+          referenceBy: row[getIndex("Reference By")] || row[17] || "",
+          presentAddress: row[getIndex("Present Address")] || row[18] || "",
+          aadharNo: row[getIndex("Aadhar Number")] || row[19] || "",
+          candidateResume: row[getIndex("Resume Copy")] || row[20] || "",
           plannedJoining: row[27] || "", // Column AB
           actualJoining: row[28] || "",  // Column AC
           indentType: row[3] || "",      // Column D
@@ -187,6 +190,13 @@ const Joining = () => {
               timestamp: row[0] || "",
             }));
           setHistoryData(processedHistory);
+        }
+
+        // Process Master sheet for Team Head List (Column D / Index 3)
+        if (masterResult.success && masterResult.data) {
+          const masterRows = masterResult.data.slice(1);
+          const teamHeads = [...new Set(masterRows.map(row => row[3]).filter(Boolean))].sort();
+          setTeamHeadList(teamHeads);
         }
       }
     } catch (err) {
@@ -734,7 +744,6 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Marital Status</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Last Salary Drawn</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Photo</th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Reference By</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Present Address</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Aadhar Number</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Resume Copy</th>
@@ -778,13 +787,13 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                     <tbody className="bg-white divide-y divide-gray-100">
                       {tableLoading ? (
                         <tr>
-                          <td colSpan={activeTab === 'pending' ? 21 : 31} className="px-4 py-1">
+                          <td colSpan={activeTab === 'pending' ? 20 : 31} className="px-4 py-1">
                             <LoadingSpinner message="Syncing joining queue..." minHeight="300px" />
                           </td>
                         </tr>
                       ) : error ? (
                         <tr>
-                          <td colSpan={activeTab === 'pending' ? 21 : 31} className="px-4 py-12 text-center">
+                          <td colSpan={activeTab === 'pending' ? 20 : 31} className="px-4 py-12 text-center">
                             <p className="text-rose-500 text-xs font-bold mb-2">Error: {error}</p>
                             <button onClick={fetchJoiningData} className="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-100 rounded text-xs font-bold shadow-sm">Retry</button>
                           </td>
@@ -792,7 +801,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                       ) : activeTab === 'pending' ? (
                         currentItems.length === 0 ? (
                           <tr>
-                            <td colSpan={activeTab === 'pending' ? 21 : 31} className="px-4 py-24 text-center">
+                            <td colSpan={activeTab === 'pending' ? 20 : 31} className="px-4 py-24 text-center">
                               <div className="flex flex-col items-center justify-center space-y-2">
                                 <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No candidates awaiting onboarding.</p>
                               </div>
@@ -831,7 +840,6 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                                   <a href={item.candidatePhoto} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-900 text-sm">View</a>
                                 ) : <span className="text-gray-400 text-sm">—</span>}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.referenceBy || "—"}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 max-w-[200px] truncate" title={item.presentAddress}>{item.presentAddress}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.aadharNo}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -1116,7 +1124,16 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Team Head</label>
-                    <input type="text" value={joiningFormData.teamHead} onChange={(e) => setJoiningFormData({ ...joiningFormData, teamHead: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                    <select 
+                      value={joiningFormData.teamHead} 
+                      onChange={(e) => setJoiningFormData({ ...joiningFormData, teamHead: e.target.value })} 
+                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    >
+                      <option value="">Select Team Head</option>
+                      {teamHeadList.map((name, i) => (
+                        <option key={i} value={name}>{name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Registration Under</label>

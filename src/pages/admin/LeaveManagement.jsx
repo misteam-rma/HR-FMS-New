@@ -26,6 +26,7 @@ const LeaveManagement = () => {
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [employeeList, setEmployeeList] = useState([]);
+  const [approverList, setApproverList] = useState([]);
   const [formData, setFormData] = useState({
     employeeId: "",
     employeeName: "",
@@ -40,6 +41,31 @@ const LeaveManagement = () => {
     planned1: "",
     remarks: ""
   });
+
+  useEffect(() => {
+    fetchLeaveData();
+    fetchEmployeeList();
+    fetchApproverList();
+  }, []);
+
+  const fetchApproverList = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`);
+      const result = await response.json();
+      const rawData = result.data || result;
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        const approvers = [];
+        rawData.slice(1).forEach(row => {
+          const name = row[10]?.toString().trim(); // Column K (index 10)
+          if (name) approvers.push(name);
+        });
+        // Unique names
+        setApproverList([...new Set(approvers)]);
+      }
+    } catch (err) {
+      console.error("fetchApproverList Error:", err);
+    }
+  };
 
   const fetchLeaveData = async () => {
     setTableLoading(true);
@@ -383,7 +409,7 @@ const LeaveManagement = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
-                    {isAdmin && <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Action</th>}
+                    {isAdmin && activeTab === "pending" && <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Action</th>}
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee Name</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Code</th>
@@ -404,7 +430,7 @@ const LeaveManagement = () => {
                   ) : (
                     currentItems.map((item, idx) => (
                       <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
-                        {isAdmin && (
+                        {isAdmin && activeTab === "pending" && (
                           <td className="px-4 py-4 whitespace-nowrap text-center">
                             <button onClick={() => handleActionClick(item)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors">
                                 <FileText size={16} />
@@ -561,12 +587,17 @@ const LeaveManagement = () => {
                         </div>
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">Approve By</label>
-                            <input 
-                                type="text" 
+                            <select 
                                 value={formData.approveBy}
                                 onChange={(e) => setFormData({...formData, approveBy: e.target.value})}
-                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-[13px] font-medium outline-none focus:ring-1 focus:ring-indigo-500 transition shadow-sm" 
-                            />
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded text-[13px] font-medium outline-none focus:ring-1 focus:ring-indigo-500 transition shadow-sm"
+                                required
+                            >
+                                <option value="">Select Approver</option>
+                                {approverList.map((name, i) => (
+                                    <option key={i} value={name}>{name}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <div className="space-y-1.5">

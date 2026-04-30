@@ -28,42 +28,65 @@ const Employee = () => {
   const fetchJoiningData = async () => {
     setTableLoading(true);
     try {
+      // 1. Fetch LEAVING data first to use for lookup
+      const leavingResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`);
+      const leavingResult = await leavingResponse.json();
+      const leavingRaw = leavingResult.success ? (leavingResult.data || leavingResult) : [];
+      const leavingMap = {};
+      
+      if (leavingRaw.length > 6) {
+        leavingRaw.slice(6).forEach(row => {
+          const id = row[1]?.toString().trim();
+          if (id) {
+            leavingMap[id] = {
+              fatherName: row[7] || "",      // Column H
+              workingLocation: row[9] || "", // Column J
+            };
+          }
+        });
+      }
+
+      // 2. Fetch JOINING data
       const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`);
       const result = await response.json();
       if (result.success) {
         const rawData = result.data || result;
         const dataRows = rawData.length > 6 ? rawData.slice(6) : [];
-        const processed = dataRows.map((row) => ({
-          employeeId: row[1] || "",
-          candidateName: row[2] || "",
-          name: row[2] || "", // Compatibility
-          fatherName: row[3] || "",
-          dateOfJoining: row[4] || "",
-          designation: row[5] || "",
-          aadharPhoto: row[6] || "",
-          candidatePhoto: row[7] || "",
-          address: row[8] || "",
-          dateOfBirth: row[9] || "",
-          gender: row[10] || "",
-          mobileNo: row[11] || "",
-          familyNo: row[12] || "",
-          relationshipWithFamily: row[13] || "",
-          accountNo: row[14] || "",
-          ifsc: row[15] || "",
-          branch: row[16] || "",
-          passbook: row[17] || "",
-          emailId: row[18] || "",
-          department: row[20] || "",
-          unit: row[39] || "",
-          plannedDate: row[31] || "",
-          actual: row[32] || "",
-          dateOfLeaving: row[3] || "",    // Column D
-          workingLocation: row[9] || "",  // Column J
-          enquiryNo: row[22] || "",       // Column W
-          indentType: row[23] || "",      // Column X
-          // reasonOfLeaving: "N/A", // Compatibility
-          reasonOfLeaving: row[32] || "",
-        }));
+        const processed = dataRows.map((row) => {
+          const empId = row[1] || "";
+          const leavingInfo = leavingMap[empId] || {};
+          
+          return {
+            employeeId: empId,
+            candidateName: row[2] || "",
+            name: row[6] || "", // Compatibility
+            fatherName: leavingInfo.fatherName || "", // From LEAVING H
+            dateOfJoining: row[19] || "",
+            designation: row[5] || "",
+            aadharPhoto: row[16] || "",
+            candidatePhoto: row[25] || "",
+            address: row[8] || "",
+            dateOfBirth: row[9] || "",
+            gender: row[7] || "", // From JOINING H
+            mobileNo: row[9] || "",
+            familyNo: row[12] || "",
+            relationshipWithFamily: row[13] || "",
+            accountNo: row[14] || "",
+            ifsc: row[15] || "",
+            branch: row[16] || "",
+            passbook: row[17] || "",
+            emailId: row[10] || "",
+            department: row[4] || "",
+            unit: row[39] || "",
+            plannedDate: row[31] || "",
+            actual: row[32] || "",
+            dateOfLeaving: row[31] || "",    // Column D
+            workingLocation: leavingInfo.workingLocation || "", // From LEAVING J
+            enquiryNo: row[2] || "",       // Column W
+            indentType: row[3] || "",      // Column X
+            reasonOfLeaving: row[32] || "",
+          };
+        });
         const active = processed.filter(emp => !emp.plannedDate || emp.plannedDate.toString().trim() === '');
         const left = processed.filter(emp => emp.plannedDate && emp.plannedDate.toString().trim() !== '');
         
@@ -91,7 +114,7 @@ const Employee = () => {
           dateOfJoining: row[8] || "",
           dateOfLeaving: row[3] || "",
           mobileNo: row[4] || "",
-          fatherName: row[7] || "",
+          fatherName: row[7] || "", // Column H
           designation: row[10] || "",
           salary: row[11] || "",
           reasonOfLeaving: row[5] || "",
@@ -111,7 +134,6 @@ const Employee = () => {
 
   useEffect(() => {
     fetchJoiningData();
-    // fetchLeavingData();
   }, []);
 
   // Unique departments for filtering
@@ -333,15 +355,13 @@ const Employee = () => {
                         <tr>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap sticky left-0 z-30 bg-gray-50 shadow-sm border-r border-gray-200">ID</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Name</th>
+                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Person Name</th>
+                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Gender</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Enquiry No</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Indent Type</th>
-                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Father Name</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Designation</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Department</th>
-                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Unit</th>
-                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Work Location</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Joined Date</th>
-                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Left Date</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Mobile No</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Email ID</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Aadhar</th>
@@ -351,6 +371,7 @@ const Employee = () => {
                         <tr>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap sticky left-0 z-30 bg-gray-50 shadow-sm border-r border-gray-200">ID</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Name</th>
+                          <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Gender</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Enquiry No</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Indent Type</th>
                           <th className="px-6 py-3.5 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">Father Name</th>
@@ -367,7 +388,7 @@ const Employee = () => {
                     <tbody className="bg-white divide-y divide-gray-100">
                       {currentItems.length === 0 ? (
                         <tr>
-                          <td colSpan="15" className="px-4 py-32 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
+                          <td colSpan="13" className="px-4 py-32 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
                              No workforce records found.
                           </td>
                         </tr>
@@ -380,14 +401,17 @@ const Employee = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-900 uppercase">
                                {emp.candidateName}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-indigo-600 uppercase">
+                               {emp.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-500 uppercase">
+                               {emp.gender || "—"}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-blue-600 uppercase">
                                {emp.enquiryNo || "—"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-[10px] font-black text-gray-500 uppercase">
                                {emp.indentType || "—"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-medium text-gray-600 uppercase">
-                               {emp.fatherName || "—"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-700 uppercase">
                                {emp.designation}
@@ -395,17 +419,8 @@ const Employee = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-center text-[10px] font-black text-gray-500 uppercase tracking-tighter">
                                {emp.department}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-[10px] font-medium text-gray-400 uppercase">
-                                {emp.unit}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-[10px] font-bold text-indigo-600 uppercase">
-                                {emp.workingLocation || "—"}
-                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-600">
                               {formatDOB(emp.dateOfJoining)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-rose-600">
-                              {formatDOB(emp.dateOfLeaving)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-700">
                               {emp.mobileNo}
@@ -433,6 +448,9 @@ const Employee = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-900 uppercase">
                                {emp.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-gray-500 uppercase">
+                               {emp.gender || "—"}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center text-xs font-bold text-blue-600 uppercase">
                                {emp.enquiryNo || "—"}
