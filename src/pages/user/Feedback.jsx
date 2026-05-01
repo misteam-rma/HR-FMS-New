@@ -6,12 +6,13 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 const Feedback = () => {
   const rawUser = localStorage.getItem("user");
   const user = rawUser ? JSON.parse(rawUser) : {};
-  
+
   const [loading, setLoading] = useState(false);
   const [tableLoading, setTableLoading] = useState(false);
   const [feedbackData, setFeedbackData] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [employees, setEmployees] = useState([]);
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -42,6 +43,29 @@ const Feedback = () => {
     });
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+      );
+      const result = await response.json();
+      if (result.success) {
+        const rawData = result.data || result;
+        if (Array.isArray(rawData)) {
+          // Data starts after headers, mapping name, email, and mobile
+          const employeeData = rawData.slice(6).map(row => ({
+            name: row[6] || '',   // Column G (Name As Per Aadhar)
+            mobile: row[9] || '', // Column J
+            email: row[10] || ''   // Column K
+          })).filter(emp => emp.name);
+          setEmployees(employeeData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
+
   const fetchFeedbackData = async () => {
     setTableLoading(true);
     try {
@@ -52,7 +76,7 @@ const Feedback = () => {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to fetch Feedback data');
       }
@@ -93,7 +117,7 @@ const Feedback = () => {
         .filter(row => Array.isArray(row) && row.some(cell => cell && cell.toString().trim() !== ''))
         .map((row, idx) => {
           const colStatus = statusIdx !== -1 && row[statusIdx] ? row[statusIdx].toString().trim() : '';
-          
+
           return {
             timestamp: tsIdx !== -1 ? row[tsIdx] : '',
             serialNo: snIdx !== -1 ? row[snIdx] : '',
@@ -116,7 +140,7 @@ const Feedback = () => {
       // Filter to show only the current user's feedback (or all if admin)
       let finalData = processedData;
       if (user.Admin?.toLowerCase() !== 'yes') {
-        finalData = processedData.filter(item => 
+        finalData = processedData.filter(item =>
           item.name && item.name.toLowerCase() === (user.Name || '').toLowerCase()
         );
       }
@@ -139,10 +163,28 @@ const Feedback = () => {
 
   useEffect(() => {
     fetchFeedbackData();
+    if (user.Admin?.toLowerCase() === 'yes') {
+      fetchEmployees();
+    }
   }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // If Admin selects a name from dropdown, auto-fill related info
+    if (name === 'name' && user.Admin?.toLowerCase() === 'yes') {
+      const selectedEmp = employees.find(emp => emp.name === value);
+      if (selectedEmp) {
+        setFormData(prev => ({
+          ...prev,
+          name: value,
+          email: selectedEmp.email || prev.email,
+          mobileNo: selectedEmp.mobile || prev.mobileNo
+        }));
+        return;
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -178,7 +220,7 @@ const Feedback = () => {
         toast.loading('Uploading screenshot...', { id: loadingToast });
         const base64Data = await fileToBase64(formData.screenshot);
         const fileName = `Feedback_${Date.now()}_${formData.screenshot.name.replace(/\s+/g, '_')}`;
-        
+
         const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -205,34 +247,34 @@ const Feedback = () => {
       const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Feedback&action=fetch`);
       const result = await fetchResponse.json();
       const existingData = result.success ? (result.data || result) : [];
-      
+
       let maxNum = 0;
       if (Array.isArray(existingData) && existingData.length > 0) {
-          let headerRowIndex = 0;
-          for (let i = 0; i < Math.min(existingData.length, 10); i++) {
-              const row = existingData[i];
-              if (row && row.some(cell => cell && cell.toString().toLowerCase().includes('serial no'))) {
-                  headerRowIndex = i;
-                  break;
-              }
+        let headerRowIndex = 0;
+        for (let i = 0; i < Math.min(existingData.length, 10); i++) {
+          const row = existingData[i];
+          if (row && row.some(cell => cell && cell.toString().toLowerCase().includes('serial no'))) {
+            headerRowIndex = i;
+            break;
           }
-          
-          const headers = existingData[headerRowIndex];
-          const snIdx = headers.findIndex(h => h?.toString().trim().toLowerCase().includes('serial no'));
-          const rows = existingData.slice(headerRowIndex + 1)
-            .filter(row => Array.isArray(row) && row.some(cell => cell && cell.toString().trim() !== ''));
-          
-          rows.forEach(row => {
-              const snString = (snIdx !== -1 ? row[snIdx] : row[1])?.toString() || ""; 
-              const match = snString.match(/FB-(\d+)/) || snString.match(/(\d+)/);
-              if (match) {
-                  const num = parseInt(match[1], 10);
-                  if (num > maxNum) maxNum = num;
-              }
-          });
+        }
+
+        const headers = existingData[headerRowIndex];
+        const snIdx = headers.findIndex(h => h?.toString().trim().toLowerCase().includes('serial no'));
+        const rows = existingData.slice(headerRowIndex + 1)
+          .filter(row => Array.isArray(row) && row.some(cell => cell && cell.toString().trim() !== ''));
+
+        rows.forEach(row => {
+          const snString = (snIdx !== -1 ? row[snIdx] : row[1])?.toString() || "";
+          const match = snString.match(/FB-(\d+)/) || snString.match(/(\d+)/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        });
       }
       const nextSerial = `FB-${String(maxNum + 1).padStart(3, '0')}`;
-      
+
       // 3. Prepare row data
       const now = new Date();
       const pad = (num) => String(num).padStart(2, '0');
@@ -309,7 +351,7 @@ const Feedback = () => {
       const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Feedback&action=fetch`);
       const result = await fetchResponse.json();
       const allData = result.data || result;
-      
+
       // The selectedFeedback.rowIndex is 1-based index
       const rowIndex = selectedFeedback.rowIndex;
       const currentRow = allData[rowIndex - 1]; // 0-based index for the array
@@ -324,7 +366,7 @@ const Feedback = () => {
         currentRow.push("");
       }
 
-      currentRow[9]  = "";               // Column J (Blank)
+      currentRow[9] = "";               // Column J (Blank)
       currentRow[10] = actualTimestamp;  // Column K
       currentRow[12] = approvalStatus;   // Column M
 
@@ -385,7 +427,7 @@ const Feedback = () => {
             <p className="text-sm text-gray-500">Report an issue or provide suggestions</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button
             onClick={() => fetchFeedbackData()}
@@ -406,168 +448,186 @@ const Feedback = () => {
         </div>
       </div>
 
-      {/* Form Section */}
+      {/* Feedback Submission Modal */}
       {showForm && (
-        <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-            <h2 className="text-lg font-semibold text-gray-800">New Feedback</h2>
-            <button
-              onClick={() => setShowForm(false)}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">New Feedback</h2>
+              <button 
+                onClick={() => setShowForm(false)} 
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  {user.Admin?.toLowerCase() === 'yes' ? (
+                    <select
+                      name="name"
+                      required
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
+                    >
+                      <option value="">Select Employee</option>
+                      {employees.map((emp, i) => (
+                        <option key={i} value={emp.name}>{emp.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      readOnly
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      placeholder="Your Name"
+                    />
+                  )}
+                </div>
 
-          <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Name */}
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+
+                {/* Mobile No */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mobile No
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobileNo"
+                    value={formData.mobileNo}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    placeholder="10-digit mobile number"
+                  />
+                </div>
+
+                {/* Problem Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Problem <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="problem"
+                    required
+                    value={formData.problem}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="">Select an issue</option>
+                    {problemOptions.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="name"
+                <textarea
+                  name="description"
                   required
-                  value={formData.name}
+                  rows={3}
+                  value={formData.description}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-                  placeholder="Your Name"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  placeholder="Describe your issue in detail..."
                 />
               </div>
 
-              {/* Email */}
+              {/* Suggestions */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Any suggestions to improve the system?
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                <textarea
+                  name="suggestion"
+                  rows={2}
+                  value={formData.suggestion}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-                  placeholder="your.email@example.com"
+                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  placeholder="We value your input..."
                 />
               </div>
 
-              {/* Mobile No */}
+              {/* Screenshot Upload */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mobile No
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Screenshot (Max 10 MB)
                 </label>
-                <input
-                  type="tel"
-                  name="mobileNo"
-                  value={formData.mobileNo}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-                  placeholder="10-digit mobile number"
-                />
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-sm text-gray-600 transition-colors"
+                  >
+                    <FileUp size={16} />
+                    <span>{formData.screenshot ? 'Change File' : 'Add File'}</span>
+                  </button>
+                  {formData.screenshot && (
+                    <div className="flex items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                      <CheckCircle size={14} />
+                      <span className="truncate max-w-[150px]">{formData.screenshot.name}</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*,.pdf"
+                    className="hidden"
+                  />
+                </div>
               </div>
 
-              {/* Problem Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Problem <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="problem"
-                  required
-                  value={formData.problem}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"
-                >
-                  <option value="">Select an issue</option>
-                  {problemOptions.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="description"
-                required
-                rows={3}
-                value={formData.description}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none resize-none"
-                placeholder="Describe your issue in detail..."
-              />
-            </div>
-
-            {/* Suggestions */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Any suggestions to improve the system?
-              </label>
-              <textarea
-                name="suggestion"
-                rows={2}
-                value={formData.suggestion}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none resize-none"
-                placeholder="We value your input..."
-              />
-            </div>
-
-            {/* Screenshot Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload a screenshot of the issue (Max 10 MB)
-              </label>
-              <div className="flex items-center gap-4">
+              {/* Submit Button */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-colors text-gray-600 hover:text-indigo-600"
+                  onClick={() => setShowForm(false)}
+                  className="px-5 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors text-gray-600"
+                  disabled={submitting}
                 >
-                  <FileUp size={20} />
-                  <span>{formData.screenshot ? 'Change File' : 'Add File'}</span>
+                  Cancel
                 </button>
-                {formData.screenshot && (
-                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
-                    <CheckCircle size={16} />
-                    <span className="truncate max-w-[200px]">{formData.screenshot.name}</span>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/*,.pdf"
-                  className="hidden"
-                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`px-5 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50`}
+                >
+                  {submitting ? <RefreshCcw size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                  {submitting ? 'Submitting...' : 'Submit Feedback'}
+                </button>
               </div>
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end pt-4 border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-6 py-2 mr-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`px-6 py-2 bg-indigo-600 text-white rounded-lg transition-all
-                  ${submitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-700 active:scale-95'}`}
-              >
-                {submitting ? 'Submitting...' : 'Submit Feedback'}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       )}
 
@@ -575,21 +635,19 @@ const Feedback = () => {
       <div className="flex gap-4 border-b border-gray-200 mt-6">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`pb-2 px-4 font-medium text-sm transition-colors relative ${
-            activeTab === 'pending'
+          className={`pb-2 px-4 font-medium text-sm transition-colors relative ${activeTab === 'pending'
               ? 'text-indigo-600 border-b-2 border-indigo-600'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           Pending Feedbacks
         </button>
         <button
           onClick={() => setActiveTab('history')}
-          className={`pb-2 px-4 font-medium text-sm transition-colors relative ${
-            activeTab === 'history'
+          className={`pb-2 px-4 font-medium text-sm transition-colors relative ${activeTab === 'history'
               ? 'text-indigo-600 border-b-2 border-indigo-600'
               : 'text-gray-500 hover:text-gray-700'
-          }`}
+            }`}
         >
           History
         </button>
@@ -626,7 +684,7 @@ const Feedback = () => {
                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider text-center">Action</th>
                   )}
                   {activeTab === 'history' && (
-                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider text-center">Status</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider text-center">Status</th>
                   )}
                   <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">ID</th>
@@ -679,9 +737,9 @@ const Feedback = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-indigo-600 whitespace-nowrap">
                       {item.screenshot ? (
-                        <a 
-                          href={item.screenshot} 
-                          target="_blank" 
+                        <a
+                          href={item.screenshot}
+                          target="_blank"
                           rel="noreferrer"
                           className="hover:underline flex items-center gap-1"
                         >
@@ -701,32 +759,53 @@ const Feedback = () => {
 
       {/* Approval Modal */}
       {showApprovalModal && selectedFeedback && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-800">Action: Feedback {selectedFeedback.serialNo}</h2>
-              <button onClick={() => setShowApprovalModal(false)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-colors">
-                <X size={20} />
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Review Feedback</h2>
+              <button 
+                onClick={() => { setShowApprovalModal(false); setApprovalStatus(''); }} 
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
               </button>
             </div>
-            
-            <form onSubmit={handleApprovalSubmit} className="p-5 space-y-4">
-              <div className="bg-gray-50 p-3 rounded-lg space-y-2 text-sm text-gray-700 border border-gray-100">
-                <p><span className="font-semibold">Name:</span> {selectedFeedback.name}</p>
-                <p><span className="font-semibold">Problem:</span> {selectedFeedback.problem}</p>
-                <p><span className="font-semibold">Description:</span> {selectedFeedback.description}</p>
-                {selectedFeedback.suggestion && <p><span className="font-semibold">Suggestion:</span> {selectedFeedback.suggestion}</p>}
+
+            <form onSubmit={handleApprovalSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 gap-3 text-sm">
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[80px]">ID:</span>
+                  <p className="text-gray-900">{selectedFeedback.serialNo}</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[80px]">Name:</span>
+                  <p className="text-gray-900">{selectedFeedback.name}</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="font-semibold text-gray-600 min-w-[80px]">Problem:</span>
+                  <p className="text-gray-900">{selectedFeedback.problem}</p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="font-semibold text-gray-600">Description:</span>
+                  <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-100">{selectedFeedback.description}</p>
+                </div>
+                {selectedFeedback.suggestion && (
+                  <div className="flex flex-col gap-1">
+                    <span className="font-semibold text-gray-600">Suggestion:</span>
+                    <p className="text-gray-900 bg-gray-50 p-2 rounded-lg border border-gray-100">{selectedFeedback.suggestion}</p>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Status <span className="text-red-500">*</span>
                 </label>
                 <select
                   required
                   value={approvalStatus}
                   onChange={(e) => setApprovalStatus(e.target.value)}
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                 >
                   <option value="">Select Status</option>
                   <option value="Approved">Approved</option>
@@ -734,11 +813,11 @@ const Feedback = () => {
                 </select>
               </div>
 
-              <div className="flex justify-end pt-4 border-t border-gray-100">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowApprovalModal(false)}
-                  className="px-4 py-2 mr-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  onClick={() => { setShowApprovalModal(false); setApprovalStatus(''); }}
+                  className="px-5 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors text-gray-600"
                   disabled={approving}
                 >
                   Cancel
@@ -746,8 +825,9 @@ const Feedback = () => {
                 <button
                   type="submit"
                   disabled={approving}
-                  className={`px-4 py-2 bg-indigo-600 text-white rounded-lg transition-all ${approving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
+                  className="px-5 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
+                  {approving ? <RefreshCcw size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                   {approving ? 'Saving...' : 'Save'}
                 </button>
               </div>

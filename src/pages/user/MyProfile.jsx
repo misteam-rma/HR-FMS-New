@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  User, 
-  Camera, 
-  Edit3, 
-  Save, 
-  X, 
-  Building, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Calendar 
+import {
+  User,
+  Camera,
+  Edit3,
+  Save,
+  X,
+  Building,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -110,9 +110,9 @@ const MyProfile = () => {
         const row = allData[i];
         if (row && Array.isArray(row)) {
           const idIndex = row.findIndex(cell => {
-             if (!cell) return false;
-             const text = cell.toString().trim().toLowerCase();
-             return text.includes('ska-joining id') || text.includes('joining id') || text === 'name as per aadhar' || text.includes('candidate name');
+            if (!cell) return false;
+            const text = cell.toString().trim().toLowerCase();
+            return text.includes('ska-joining id') || text.includes('joining id') || text === 'name as per aadhar' || text.includes('candidate name');
           });
 
           if (idIndex !== -1) {
@@ -133,7 +133,7 @@ const MyProfile = () => {
       const employeeIdIndex = headers.findIndex(h =>
         h && (h.toLowerCase().includes('ska-joining id') || h.toLowerCase().includes('joining id'))
       );
-      
+
       const nameIndex = headers.findIndex(h =>
         h && (h.toLowerCase().includes('name as per aadhar') || h.toLowerCase().includes('candidate name') || h.toLowerCase() === 'name')
       );
@@ -141,21 +141,21 @@ const MyProfile = () => {
       // Find the employee row index
       const rowIndex = allData.findIndex((row, idx) => {
         if (idx <= headerRowIndex) return false;
-        
+
         // Match by Name first
         if (nameIndex !== -1 && profileData.candidateName) {
-           const rowName = row[nameIndex]?.toString().trim().toLowerCase();
-           const targetName = profileData.candidateName.toString().trim().toLowerCase();
-           if (rowName === targetName) return true;
+          const rowName = row[nameIndex]?.toString().trim().toLowerCase();
+          const targetName = profileData.candidateName.toString().trim().toLowerCase();
+          if (rowName === targetName) return true;
         }
-        
+
         // Match by Employee ID as fallback
         if (employeeIdIndex !== -1 && profileData.joiningNo) {
-           const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
-           const targetId = profileData.joiningNo.toString().trim().toLowerCase();
-           if (rowId && rowId === targetId) return true;
+          const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
+          const targetId = profileData.joiningNo.toString().trim().toLowerCase();
+          if (rowId && rowId === targetId) return true;
         }
-        
+
         return false;
       });
 
@@ -277,10 +277,10 @@ const MyProfile = () => {
       for (let i = 0; i < rawData.length; i++) {
         const row = rawData[i];
         if (row && Array.isArray(row)) {
-          const typeIndex = row.findIndex(cell => 
+          const typeIndex = row.findIndex(cell =>
             cell && cell.toString().trim().toLowerCase().includes('leave type')
           );
-          
+
           if (typeIndex !== -1) {
             headerRowIndex = i;
             headers = row.map(h => h?.toString().trim());
@@ -323,19 +323,19 @@ const MyProfile = () => {
         .filter(row => {
           const rowEmployeeName = row[employeeNameIndex]?.toString().trim() || "";
           const targetName = profileData?.candidateName?.toString().trim() || "";
-          
+
           // Also try to match with user from localStorage as fallback
           const userStr = localStorage.getItem('user');
           let lsUserName = "";
           if (userStr) {
-             const user = JSON.parse(userStr);
-             lsUserName = (user.Name || user.userName || "").toString().trim();
+            const user = JSON.parse(userStr);
+            lsUserName = (user.Name || user.userName || "").toString().trim();
           }
 
           if (!rowEmployeeName) return false;
 
-          return (targetName && rowEmployeeName.toLowerCase() === targetName.toLowerCase()) || 
-                 (lsUserName && rowEmployeeName.toLowerCase() === lsUserName.toLowerCase());
+          return (targetName && rowEmployeeName.toLowerCase() === targetName.toLowerCase()) ||
+            (lsUserName && rowEmployeeName.toLowerCase() === lsUserName.toLowerCase());
         })
         .map(row => ({
           employeeName: row[employeeNameIndex] || '',
@@ -521,12 +521,12 @@ const MyProfile = () => {
         const targetName = userName?.toString() || "";
         const candidateCode = task.joiningNo?.toString() || "";
         const targetCode = userCode?.toString() || "";
-        
+
         // Match by Code if available (most reliable)
         if (targetCode && candidateCode && candidateCode.trim().toLowerCase() === targetCode.trim().toLowerCase()) {
-           return true;
+          return true;
         }
-        
+
         // Fallback to name match
         return candidateName.trim().toLowerCase() === targetName.trim().toLowerCase() && targetName !== "";
       });
@@ -643,9 +643,9 @@ const MyProfile = () => {
         const row = allData[i];
         if (row && Array.isArray(row)) {
           const idIndex = row.findIndex(cell => {
-             if (!cell) return false;
-             const text = cell.toString().trim().toLowerCase();
-             return text.includes('ska-joining id') || text.includes('joining id') || text === 'name as per aadhar' || text.includes('candidate name');
+            if (!cell) return false;
+            const text = cell.toString().trim().toLowerCase();
+            return text.includes('ska-joining id') || text.includes('joining id') || text === 'name as per aadhar' || text.includes('candidate name');
           });
 
           if (idIndex !== -1) {
@@ -666,7 +666,7 @@ const MyProfile = () => {
       const employeeIdIndex = headers.findIndex(h =>
         h && (h.toLowerCase().includes('ska-joining id') || h.toLowerCase().includes('joining id'))
       );
-      
+
       const nameIndex = headers.findIndex(h =>
         h && (h.toLowerCase().includes('name as per aadhar') || h.toLowerCase().includes('candidate name') || h.toLowerCase() === 'name')
       );
@@ -674,21 +674,21 @@ const MyProfile = () => {
       // 4. Find the employee row index
       const rowIndex = allData.findIndex((row, idx) => {
         if (idx <= headerRowIndex) return false;
-        
+
         // Match by Name first (as requested)
         if (nameIndex !== -1 && profileData.candidateName) {
-           const rowName = row[nameIndex]?.toString().trim().toLowerCase();
-           const targetName = profileData.candidateName.toString().trim().toLowerCase();
-           if (rowName === targetName) return true;
+          const rowName = row[nameIndex]?.toString().trim().toLowerCase();
+          const targetName = profileData.candidateName.toString().trim().toLowerCase();
+          if (rowName === targetName) return true;
         }
-        
+
         // Match by Employee ID as fallback
         if (employeeIdIndex !== -1 && profileData.joiningNo) {
-           const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
-           const targetId = profileData.joiningNo.toString().trim().toLowerCase();
-           if (rowId && rowId === targetId) return true;
+          const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
+          const targetId = profileData.joiningNo.toString().trim().toLowerCase();
+          if (rowId && rowId === targetId) return true;
         }
-        
+
         return false;
       });
 
@@ -1065,10 +1065,10 @@ const MyProfile = () => {
                       <td className="px-6 py-4">
                         <span
                           className={`px-2 py-1 text-xs rounded-full ${leave.status.toLowerCase() === "approved"
-                              ? "bg-green-100 text-green-800"
-                              : leave.status.toLowerCase() === "rejected"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-yellow-100 text-yellow-800"
+                            ? "bg-green-100 text-green-800"
+                            : leave.status.toLowerCase() === "rejected"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
                             }`}
                         >
                           {leave.status}

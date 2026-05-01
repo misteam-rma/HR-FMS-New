@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Search, Users, Calendar, Filter, Clock, CheckCircle2, 
   XCircle, AlertCircle, ChevronRight, FileText, ChevronDown, 
-  Check, History, Download, MapPin, List, LayoutDashboard, Camera, RotateCw, MapPinned
+  Check, History, Download, MapPin, List, LayoutDashboard, Camera, RotateCw, MapPinned,
+  Plus, Loader2, Send
 } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import toast from "react-hot-toast";
@@ -589,31 +590,31 @@ const AttendanceDaily = () => {
 
       {/* Full Screen Attendance Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] bg-gray-900/95 backdrop-blur-lg flex flex-col justify-center items-center p-4 sm:p-6 animate-in fade-in duration-300 font-outfit">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100 relative p-6 md:p-8">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 font-outfit">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100 relative">
             
-            {/* Close Button */}
-            <button 
-              type="button"
-              onClick={() => { stopCamera(); setIsModalOpen(false); setCapturedImage(null); }}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all"
-            >
-              <XCircle size={24} />
-            </button>
-
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-black text-gray-800 uppercase tracking-wider flex items-center justify-center gap-2">
-                <CheckCircle2 className="text-indigo-600" size={26} />
-                <span>Employee Attendance</span>
-              </h2>
-              <p className="text-xs font-medium text-gray-400 uppercase mt-1">Mandatory live parameter mapping protocols</p>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                  <Plus size={20} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 uppercase tracking-tight">New Attendance Entry</h2>
+              </div>
+              <button 
+                type="button"
+                onClick={() => { stopCamera(); setIsModalOpen(false); setCapturedImage(null); }}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all"
+              >
+                <XCircle size={24} />
+              </button>
             </div>
 
-            <form onSubmit={handlePunchSubmit} className="space-y-6 flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Employee Code Field (Conditional: Dropdown vs Read-only based on Admin status) */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Employee Code</label>
+            <form onSubmit={handlePunchSubmit} className="p-8 space-y-6 flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Employee ID */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Employee ID</label>
                   {(() => {
                     const userStr = localStorage.getItem('user');
                     const user = userStr ? JSON.parse(userStr) : null;
@@ -625,7 +626,7 @@ const AttendanceDaily = () => {
                           type="text"
                           value={modalFormData.code}
                           readOnly
-                          className="h-10 px-3 bg-gray-100 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
+                          className="h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
                         />
                       );
                     } else {
@@ -633,10 +634,10 @@ const AttendanceDaily = () => {
                         <select 
                           value={modalFormData.code}
                           onChange={handleCodeChange}
-                          className="h-10 px-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                          className="h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                           required
                         >
-                          <option value="">Select Employee Code</option>
+                          <option value="">Select Employee ID</option>
                           {userList.map((user, idx) => (
                             <option key={idx} value={user.code}>{user.code}</option>
                           ))}
@@ -646,120 +647,146 @@ const AttendanceDaily = () => {
                   })()}
                 </div>
 
-                {/* Employee Name (Read Only) */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Employee Name</label>
-                  <input 
-                    type="text"
-                    value={modalFormData.name}
-                    readOnly
-                    placeholder="Auto-filled on verify"
-                    className="h-10 px-3 bg-gray-100 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
-                  />
-                </div>
-
-                {/* Department (Read Only) */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Department</label>
-                  <input 
-                    type="text"
-                    value={modalFormData.department}
-                    readOnly
-                    placeholder="Auto-filled"
-                    className="h-10 px-3 bg-gray-100 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
-                  />
-                </div>
-
-                {/* Status Dropdown */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Punch Status</label>
+                {/* Punch Status */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Punch Status</label>
                   <select 
                     value={modalFormData.punchType}
                     onChange={(e) => setModalFormData({ ...modalFormData, punchType: e.target.value })}
-                    className="h-10 px-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                    className="h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
                   >
                     <option value="in">PUNCH IN</option>
                     <option value="out">PUNCH OUT</option>
                   </select>
                 </div>
+
+                {/* Employee Name */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Employee Name</label>
+                  <input 
+                    type="text"
+                    value={modalFormData.name}
+                    readOnly
+                    placeholder="Auto-filled"
+                    className="h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Department */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Department</label>
+                  <input 
+                    type="text"
+                    value={modalFormData.department}
+                    readOnly
+                    placeholder="Auto-filled"
+                    className="h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 focus:outline-none shadow-sm cursor-not-allowed"
+                  />
+                </div>
               </div>
 
               {/* Location Module */}
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <MapPin className="text-indigo-600 mt-1" size={20} />
-                  <div>
-                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Device Location</h4>
-                    <p className="text-xs font-normal text-gray-500 line-clamp-2 mt-1 leading-relaxed">
-                      {loadingLocation ? "Tracking satellites..." : (locationData.locationName || "Press to resolve geocodes")}
-                    </p>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Verification Location</label>
+                <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between gap-4 group hover:border-indigo-400 transition-all shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="text-indigo-600 mt-1" size={18} />
+                    <div>
+                      <p className={`text-xs font-medium ${loadingLocation ? 'text-indigo-500 animate-pulse' : 'text-gray-600'}`}>
+                        {loadingLocation ? "Tracking satellites..." : (locationData.locationName || "Press button to resolve location")}
+                      </p>
+                    </div>
                   </div>
+                  <button 
+                    type="button"
+                    onClick={fetchLocation}
+                    disabled={loadingLocation}
+                    className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                  >
+                    {loadingLocation ? <RotateCw size={18} className="animate-spin" /> : <MapPinned size={18} />}
+                  </button>
                 </div>
-                <button 
-                  type="button"
-                  onClick={fetchLocation}
-                  disabled={loadingLocation}
-                  className="p-2 bg-white border border-gray-200 hover:border-indigo-300 text-indigo-600 hover:bg-indigo-50 rounded-xl transition shadow-sm disabled:opacity-50"
-                >
-                  {loadingLocation ? <RotateCw size={16} className="animate-spin" /> : <MapPinned size={16} />}
-                </button>
               </div>
 
               {/* Camera Capture Module */}
-              <div className="flex flex-col items-center gap-3">
-                <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest self-start">Biometric Identity Authentication</label>
+              <div className="space-y-4 pt-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Identity Authentication</label>
                 
-                <div className="relative w-full max-w-sm h-64 bg-black rounded-3xl overflow-hidden shadow-lg border-2 border-gray-200 flex items-center justify-center">
+                <div className="relative w-full aspect-[4/3] max-w-sm mx-auto bg-slate-50 border border-gray-200 rounded-2xl overflow-hidden flex flex-col items-center justify-center transition-all">
                   {cameraActive ? (
                     <video ref={videoRef} className="w-full h-full object-cover scale-x-[-1]" playsInline />
                   ) : capturedImage ? (
                     <img src={capturedImage} className="w-full h-full object-cover" alt="Captured Identity" />
                   ) : (
-                    <div className="text-center p-6">
-                      <Camera className="text-gray-700 mx-auto mb-3" size={32} />
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Camera initialization pending</p>
+                    <div className="text-center p-8 space-y-3">
+                      <Camera className="text-gray-300 mx-auto" size={48} strokeWidth={1.5} />
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Initialization Required</p>
                     </div>
                   )}
                   
-                  {/* Canvas for capturing */}
                   <canvas ref={canvasRef} className="hidden" />
+                  {cameraActive && (
+                    <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/20">
+                       <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                       <span className="text-[9px] font-black text-white uppercase tracking-widest">Active Link</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex items-center justify-center gap-3">
                   {!cameraActive ? (
                     <button 
                       type="button"
                       onClick={startCamera}
-                      className="px-5 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition shadow-sm"
+                      className="px-8 py-3 bg-gray-900 hover:bg-black text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg"
                     >
                       <Camera size={14} />
-                      <span>Initialize Camera</span>
+                      <span>Initialize Authentication</span>
                     </button>
                   ) : (
                     <button 
                       type="button"
                       onClick={capturePhoto}
-                      className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition shadow-sm"
+                      className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg"
                     >
                       <CheckCircle2 size={14} />
-                      <span>Capture & Print</span>
+                      <span>Authenticate & Log</span>
+                    </button>
+                  )}
+                  {capturedImage && !cameraActive && (
+                    <button 
+                      type="button"
+                      onClick={() => setCapturedImage(null)}
+                      className="p-3 bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition shadow-sm"
+                    >
+                      <RotateCw size={16} />
                     </button>
                   )}
                 </div>
               </div>
 
               {/* Submit Button */}
-              <button 
-                type="submit"
-                disabled={isPunching}
-                className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPunching ? "Verifying..." : "Submit Verification Log"}
-              </button>
+              <div className="pt-4">
+                <button 
+                  type="submit"
+                  disabled={isPunching}
+                  className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-xl shadow-indigo-100 disabled:opacity-50"
+                >
+                  {isPunching ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" />
+                      <span>Processing Log...</span>
+                    </>
+                  ) : (
+                    "Submit Verification Log"
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };

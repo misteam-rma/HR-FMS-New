@@ -16,6 +16,7 @@ const NOC = () => {
   const [selectedNoc, setSelectedNoc] = useState(null);
   const [approvalStatus, setApprovalStatus] = useState('');
   const [approving, setApproving] = useState(false);
+  const [employees, setEmployees] = useState([]);
 
   const [formData, setFormData] = useState({
     code: user.Code || '',
@@ -29,6 +30,28 @@ const NOC = () => {
     totalLeaveTaken: '',
     articleEmail: '',
   });
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+      );
+      const result = await response.json();
+      if (result.success) {
+        const rawData = result.data || result;
+        if (Array.isArray(rawData)) {
+          // Mapping Code (Index 1) and Name (Index 6)
+          const employeeData = rawData.slice(6).map(row => ({
+            code: row[1] || '', // Column B
+            name: row[6] || ''  // Column G
+          })).filter(emp => emp.code);
+          setEmployees(employeeData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
 
   const fetchNocData = async () => {
     setTableLoading(true);
@@ -109,10 +132,29 @@ const NOC = () => {
     }
   };
 
-  useEffect(() => { fetchNocData(); }, []);
+  useEffect(() => {
+    fetchNocData();
+    if (user.Admin?.toLowerCase() === 'yes') {
+      fetchEmployees();
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // If Admin selects a code from dropdown, auto-fill name
+    if (name === 'code' && user.Admin?.toLowerCase() === 'yes') {
+      const selectedEmp = employees.find(emp => emp.code === value);
+      if (selectedEmp) {
+        setFormData(prev => ({
+          ...prev,
+          code: value,
+          name: selectedEmp.name || prev.name
+        }));
+        return;
+      }
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -289,12 +331,42 @@ const NOC = () => {
             </div>
             <form onSubmit={handleSubmit} className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Code</label>
-                <input name="code" value={formData.code} onChange={handleChange} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Employee Code" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Code <span className="text-red-500">*</span></label>
+                {user.Admin?.toLowerCase() === 'yes' ? (
+                  <select
+                    name="code"
+                    required
+                    value={formData.code}
+                    onChange={handleChange}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  >
+                    <option value="">Select Code</option>
+                    {employees.map((emp, i) => (
+                      <option key={i} value={emp.code}>{emp.code}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name="code"
+                    value={formData.code}
+                    onChange={handleChange}
+                    readOnly
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none"
+                    placeholder="Employee Code"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
-                <input name="name" value={formData.name} onChange={handleChange} required className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Full Name" />
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  readOnly={user.Admin?.toLowerCase() !== 'yes' || !!formData.code}
+                  className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${user.Admin?.toLowerCase() !== 'yes' || !!formData.code ? 'bg-gray-50' : ''}`}
+                  placeholder="Full Name"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Team Head</label>
