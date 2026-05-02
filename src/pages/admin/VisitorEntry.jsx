@@ -209,17 +209,31 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (name === "mobileNumber" && value.length === 10) {
-      try {
-        const res = await fetchVisitorByMobileApi(value);
-        if (res.found) {
-          setFormData((prev) => ({
-            ...prev,
-            visitorName: res.data.visitorName || "",
-            visitorAddress: res.data.visitorAddress || "",
-          }));
-          showToast("Visitor recognized", "success");
-        }
-      } catch (err) { }
+      // Don't auto-recognize for Admins to allow new visitor entries without interference
+      const userStr = localStorage.getItem('user');
+      let isAdmin = false;
+      if (userStr) {
+        try {
+          const userData = JSON.parse(userStr);
+          isAdmin = userData.Admin?.toLowerCase() === 'yes' || 
+                    userData.Role?.toLowerCase() === 'admin' || 
+                    userData.role?.toLowerCase() === 'admin';
+        } catch (e) {}
+      }
+
+      if (!isAdmin) {
+        try {
+          const res = await fetchVisitorByMobileApi(value);
+          if (res.found) {
+            setFormData((prev) => ({
+              ...prev,
+              visitorName: res.data.visitorName || "",
+              visitorAddress: res.data.visitorAddress || "",
+            }));
+            showToast("Visitor recognized", "success");
+          }
+        } catch (err) { }
+      }
     }
   };
 
