@@ -1261,7 +1261,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Current Address</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Date Of Joining</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Team Head</th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Registration Under</th>
+                          {/* <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Registration Under</th> */}
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Name of the Bank</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Current Bank A.C No.</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Ifsc Code</th>
@@ -1270,7 +1270,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Upload Valid PAN Identity Proof</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Upload Student Identity Card(Artical)</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Resume Copy</th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Reporting To</th>
+                          {/* <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Reporting To</th> */}
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-100">
@@ -1328,7 +1328,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 max-w-[200px] truncate" title={item.currentAddress}>{item.currentAddress}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-emerald-600">{formatDOB(item.dateOfJoining)}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.teamHead}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.registrationUnder}</td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.registrationUnder}</td> */}
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.bankName}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.accountNo}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.ifscCode}</td>
@@ -1357,7 +1357,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                                   <a href={item.resumeCopy} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline text-sm">View</a>
                                 ) : <span className="text-gray-400 text-sm">—</span>}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.reportingTo}</td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.reportingTo}</td> */}
                             </tr>
                           ))
                         )}
