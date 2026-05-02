@@ -383,7 +383,7 @@ const AttendanceDaily = () => {
   }, []);
 
   const filteredData = attendanceData.filter(item => {
-    if (activeTab === "history" && item.status !== "Absent" && item.lateMins === "0") return false;
+    // Show all data without tab filtering
     const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = !filterDepartment || item.department === filterDepartment;
     const matchesDate = !filterDate || item.date === filterDate;
@@ -423,21 +423,8 @@ const AttendanceDaily = () => {
       {/* 🧩 Header Section - Call Tracker Parity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tab Switcher - Call Tracker SPEC */}
-        <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
-           <button 
-             onClick={() => { setActiveTab("pending"); setCurrentPage(1); }} 
-             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'pending' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-           >
-             <Clock size={13} />
-             <span>Pending ({filteredData.length})</span>
-           </button>
-           <button 
-             onClick={() => { setActiveTab("history"); setCurrentPage(1); }} 
-             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'history' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-           >
-             <History size={13} />
-             <span>History</span>
-           </button>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-gray-800">Attendance Log</h1>
         </div>
 
         {/* Filter Toolbar */}

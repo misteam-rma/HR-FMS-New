@@ -106,7 +106,7 @@ const Attendance = () => {
   }, [activeTab, filterMonth, searchTerm, filterDepartment]);
 
   const filteredData = attendanceData.filter(item => {
-    if (activeTab === "pending" && item.status !== "Under Review") return false;
+    // Show all data without tab filtering
     const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = !filterDepartment || item.department === filterDepartment;
     const matchesMonth = !filterMonth || item.month === filterMonth;
@@ -146,21 +146,8 @@ const Attendance = () => {
       {/* 🧩 Header Section - Call Tracker Parity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tab Switcher - Call Tracker SPEC */}
-        <div className="flex bg-gray-100 p-1 rounded-lg w-fit">
-           <button 
-             onClick={() => { setActiveTab("all"); setCurrentPage(1); }} 
-             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'all' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-           >
-             <BarChart3 size={13} />
-             <span>All History ({filteredData.length})</span>
-           </button>
-           <button 
-             onClick={() => { setActiveTab("pending"); setCurrentPage(1); }} 
-             className={`flex items-center gap-2 py-1 px-4 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${activeTab === 'pending' ? 'bg-white text-indigo-600 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
-           >
-             <History size={13} />
-             <span>Under Review</span>
-           </button>
+        <div className="flex items-center gap-2">
+          <h1 className="text-xl font-bold text-gray-800">Monthly Attendance</h1>
         </div>
 
         {/* Filter Toolbar */}
