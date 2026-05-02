@@ -262,7 +262,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
       if (userStr) {
         try {
           const userData = JSON.parse(userStr);
-          userCode = userData.code || "";
+          userCode = userData.Code || userData.code || "";
         } catch (e) {}
       }
 

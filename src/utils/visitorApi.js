@@ -61,14 +61,40 @@ export const fetchVisitsForApprovalApi = async () => {
  * Create a new visit request
  */
 export const createVisitRequestApi = async (data) => {
-  // Convert photo to base64 if it's a file
-  let photoBase64 = null;
+  // 1. Upload photo to Google Drive first
+  let photoUrl = "";
   if (data.photoFile) {
-    photoBase64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.readAsDataURL(data.photoFile);
-    });
+    try {
+      const base64Photo = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(data.photoFile);
+      });
+
+      const folderId = import.meta.env.VITE_GOOGLE_DRIVE_VISITOR_PHOTO_FOLDER_ID;
+      const uploadFormData = new URLSearchParams();
+      uploadFormData.append('action', 'uploadFile');
+      uploadFormData.append('base64Data', base64Photo);
+      uploadFormData.append('fileName', `Visitor_${data.visitorName}_${Date.now()}.jpg`);
+      uploadFormData.append('mimeType', 'image/jpeg');
+      uploadFormData.append('folderId', folderId || "");
+
+      const uploadResponse = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: uploadFormData
+      });
+      
+      const uploadResult = await uploadResponse.json();
+      if (uploadResult.success && uploadResult.fileUrl) {
+        // Extract file ID from the backend's returned URL if needed, 
+        // but here we can use the direct URL provided
+        photoUrl = uploadResult.fileUrl;
+      }
+    } catch (err) {
+      console.error("Error uploading visitor photo:", err);
+      // Fallback or continue with empty URL
+    }
   }
 
   // Row structure (A to S): Timestamp, Serial No., visitor Name, Mobile Number, Email Address, Visitor Photo, Person To Meet, Purpose of Visit, Time of Entry, Visitor Address, [K], L, [M], N, [O], [P], [Q], [R], User Code (S)
@@ -78,7 +104,7 @@ export const createVisitRequestApi = async (data) => {
   rowData[2] = data.visitorName || "";             // C: visitor Name
   rowData[3] = data.mobileNumber || "";            // D: Mobile Number
   rowData[4] = data.email || "";                   // E: Email Address
-  rowData[5] = photoBase64 || "";                  // F: Visitor Photo
+  rowData[5] = photoUrl || "";                     // F: Visitor Photo (Drive URL)
   rowData[6] = data.personToMeet || "";            // G: Person To Meet
   rowData[7] = data.purposeOfVisit || "";          // H: Purpose of Visit
   rowData[8] = data.timeOfEntry || "";             // I: Time of Entry

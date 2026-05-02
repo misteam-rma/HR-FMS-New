@@ -33,6 +33,12 @@ const VisitorApproval = () => {
     const [updatingStatus, setUpdatingStatus] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
+    const getDriveDirectLink = (url) => {
+        if (!url || !url.includes('drive.google.com')) return url;
+        const fileId = url.match(/\/d\/([^\/]+)/)?.[1] || url.match(/id=([^\&]+)/)?.[1];
+        return fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : url;
+    };
+
     const fetchAllData = useCallback(async (isPolling = false) => {
         if (!isPolling) setLoading(true);
         try {
@@ -276,7 +282,7 @@ const VisitorApproval = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="h-11 w-11 rounded-xl bg-slate-100 border-2 border-white ring-1 ring-slate-200 overflow-hidden flex items-center justify-center">
                                                     {visit.photo ? (
-                                                        <img src={visit.photo} className="h-full w-full object-cover" alt="Visitor" />
+                                                        <img src={getDriveDirectLink(visit.photo)} className="h-full w-full object-cover" alt="Visitor" />
                                                     ) : (
                                                         <User size={18} className="text-slate-300" />
                                                     )}
