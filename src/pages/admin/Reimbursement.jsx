@@ -9,6 +9,10 @@ import LoadingSpinner from "../../components/LoadingSpinner";
 import toast from "react-hot-toast";
 
 const Reimbursement = () => {
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : {};
+  const isAdmin = user?.Admin?.toLowerCase() === 'yes';
+
   const [reimbursementData, setReimbursementData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
@@ -17,17 +21,25 @@ const Reimbursement = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [articleList, setArticleList] = useState([]);
+  const [articleList, setArticleList] = useState([]); // This will store Senior list (K/L)
+  const [employeeList, setEmployeeList] = useState([]); // This will store Employee list (I/J)
 
   // Form States
-  const [formData, setFormData] = useState({
-    billMonth: new Date().toISOString().substring(0, 7), // YYYY-MM
-    articleCode: '',
-    articleName: '',
-    vehicleType: '2 Wheeler',
-    ratePerKm: '3.5',
-    visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
-    notes: ''
+  const [formData, setFormData] = useState(() => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isAdmin = user?.Admin?.toLowerCase() === 'yes';
+    return {
+      billMonth: new Date().toISOString().substring(0, 7), // YYYY-MM
+      employeeCode: isAdmin ? '' : (user?.Code || ''),
+      employeeName: isAdmin ? '' : (user?.Name || ''),
+      seniorCode: '',
+      seniorName: '',
+      vehicleType: '2 Wheeler',
+      ratePerKm: '3.5',
+      visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
+      notes: ''
+    };
   });
 
   const vehicleOptions = [
@@ -49,16 +61,24 @@ const Reimbursement = () => {
       const rawData = result.data || result;
 
       if (Array.isArray(rawData) && rawData.length > 0) {
-        const combinedArticles = [];
+        const combinedSeniors = [];
+        const combinedEmployees = [];
         const combinedPlaces = [];
 
         // Skip header row
         rawData.slice(1).forEach(row => {
-          // Fetch only from Column L (index 11) for Code and Column K (index 10) for Name
-          const code = row[11]?.toString().trim();
-          const name = row[10]?.toString().trim();
-          if (code) {
-            combinedArticles.push({ code, name: name || code });
+          // Senior Data: Column L (index 11) for Code and Column K (index 10) for Name
+          const seniorCode = row[11]?.toString().trim();
+          const seniorName = row[10]?.toString().trim();
+          if (seniorCode) {
+            combinedSeniors.push({ code: seniorCode, name: seniorName || seniorCode });
+          }
+
+          // Employee Data: Column J (index 9) for Code and Column I (index 8) for Name
+          const empCode = row[9]?.toString().trim();
+          const empName = row[8]?.toString().trim();
+          if (empCode) {
+            combinedEmployees.push({ code: empCode, name: empName || empCode });
           }
 
           // Places logic: Column G (6) for Name, Column H (7) for KM
@@ -69,9 +89,13 @@ const Reimbursement = () => {
           }
         });
 
-        // Filter for unique codes
-        const uniqueArticles = combinedArticles.filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
-        setArticleList(uniqueArticles);
+        // Filter for unique seniors
+        const uniqueSeniors = combinedSeniors.filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
+        setArticleList(uniqueSeniors);
+
+        // Filter for unique employees
+        const uniqueEmployees = combinedEmployees.filter((v, i, a) => a.findIndex(t => t.code === v.code) === i);
+        setEmployeeList(uniqueEmployees);
 
         // Filter unique places
         const uniquePlaces = combinedPlaces.filter((v, i, a) => a.findIndex(t => t.label === v.label) === i);
@@ -118,13 +142,13 @@ const Reimbursement = () => {
     }
   };
 
-  const handleArticleCodeChange = (e) => {
+  const handleSeniorCodeChange = (e) => {
     const code = e.target.value;
-    const article = articleList.find(a => a.code === code);
+    const senior = articleList.find(a => a.code === code);
     setFormData({
       ...formData,
-      articleCode: code,
-      articleName: article ? article.name : ''
+      seniorCode: code,
+      seniorName: senior ? senior.name : ''
     });
   };
 
@@ -176,7 +200,7 @@ const Reimbursement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.articleCode) return toast.error("Please select Article Code");
+    if (!formData.seniorCode) return toast.error("Please select Senior Code");
 
     setIsSubmitting(true);
     try {
@@ -200,7 +224,7 @@ const Reimbursement = () => {
 
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : {};
-      const article = articleList.find(a => a.code === formData.articleCode);
+      const article = articleList.find(a => a.code === formData.seniorCode);
       const empType = article?.type || 'Field Staff';
       const now = new Date();
       const timestamp = now.toLocaleString();
@@ -219,14 +243,14 @@ const Reimbursement = () => {
           formattedSerial,        // B: Serial No
           formData.billMonth,     // C: Form Date
           empType,                // D: Employee Type
-          currentUser.Code || '', // E: Employee Code
-          currentUser.Name || '', // F: Employee Name
+          formData.employeeCode,  // E: Employee Code
+          formData.employeeName,  // F: Employee Name
           formData.vehicleType,   // G: Vehical Type
           formData.ratePerKm,     // H: Rate Per KM
           visit.place,            // I: Visit Address (Individual)
           visit.date,             // J: Visit Date (Individual)
-          formData.articleCode,   // K: Senior Code
-          formData.articleName,   // L: Senior Name
+          formData.seniorCode,    // K: Senior Code
+          formData.seniorName,    // L: Senior Name
           formData.notes,         // M: Note
           visitKm,                // N: Total KM (Individual)
           visitAmount,            // O: Total Price (Individual)
@@ -253,10 +277,16 @@ const Reimbursement = () => {
       toast.success("Reimbursement claim submitted successfully!");
       setIsModalOpen(false);
       fetchReimbursementLogs();
+      
+      const updatedUserStr = localStorage.getItem('user');
+      const updatedUser = updatedUserStr ? JSON.parse(updatedUserStr) : null;
+      const isAdmin = updatedUser?.Admin?.toLowerCase() === 'yes';
       setFormData({
         billMonth: new Date().toISOString().substring(0, 7),
-        articleCode: '',
-        articleName: '',
+        employeeCode: isAdmin ? '' : (updatedUser?.Code || ''),
+        employeeName: isAdmin ? '' : (updatedUser?.Name || ''),
+        seniorCode: '',
+        seniorName: '',
         vehicleType: '2 Wheeler',
         ratePerKm: '3.5',
         visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
@@ -409,30 +439,77 @@ const Reimbursement = () => {
                   />
                 </div>
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Employee Code */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Employee Code</label>
+                  {isAdmin ? (
+                    <select
+                      value={formData.employeeCode}
+                      onChange={(e) => {
+                        const code = e.target.value;
+                        const emp = employeeList.find(a => a.code === code);
+                        setFormData({ 
+                          ...formData, 
+                          employeeCode: code,
+                          employeeName: emp ? emp.name : '' 
+                        });
+                      }}
+                      className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      required
+                    >
+                      <option value="">Select code</option>
+                      {employeeList.map(a => <option key={a.code} value={a.code}>{a.code}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={formData.employeeCode}
+                      readOnly
+                      className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 outline-none"
+                    />
+                  )}
+                </div>
 
-              {/* Article Code */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Article Code</label>
-                <select
-                  value={formData.articleCode}
-                  onChange={handleArticleCodeChange}
-                  className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  required
-                >
-                  <option value="">Select code</option>
-                  {articleList.map(a => <option key={a.code} value={a.code}>{a.code}</option>)}
-                </select>
+                {/* Employee Name */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Employee Name</label>
+                  <input
+                    type="text"
+                    value={formData.employeeName}
+                    readOnly
+                    placeholder={isAdmin ? "Select code first" : ""}
+                    className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 outline-none"
+                  />
+                </div>
               </div>
 
-              {/* Article Name */}
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Article Name</label>
-                <input
-                  type="text"
-                  value={formData.articleName}
-                  readOnly
-                  className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 outline-none"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                {/* Senior Code */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senior Code</label>
+                  <select
+                    value={formData.seniorCode}
+                    onChange={handleSeniorCodeChange}
+                    className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    required
+                  >
+                    <option value="">Select code</option>
+                    {articleList.map(a => <option key={a.code} value={a.code}>{a.code}</option>)}
+                  </select>
+                </div>
+
+                {/* Senior Name */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Senior Name</label>
+                  <input
+                    type="text"
+                    value={formData.seniorName}
+                    readOnly
+                    className="w-full h-10 px-3 bg-gray-50 border border-gray-200 rounded-lg text-[13px] font-medium text-gray-500 outline-none"
+                  />
+                </div>
               </div>
 
               {/* Vehicle Type */}

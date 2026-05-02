@@ -142,6 +142,7 @@ const Joining = () => {
           plannedJoining: row[27] || "", // Column AB
           actualJoining: row[28] || "",  // Column AC
           indentType: row[3] || "",      // Column D
+          gender: row[17] || "",         // Column R (Index 17)
         }));
 
         // Pending: AB filled, AC empty
@@ -539,6 +540,27 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
         console.warn('Silent failure on ENQUIRY date stamp sync:', enqError);
       }
 
+      // Send Welcome Email
+      try {
+        const toEmail = joiningFormData.personalEmail || selectedItem?.candidateEmail;
+        const empName = joiningFormData.nameAsPerAadhar || selectedItem?.candidateName || 'Employee';
+        if (toEmail) {
+          await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              action: 'shareViaEmail',
+              recipientEmail: toEmail,
+              subject: 'Joining Registration Successfully Submitted',
+              message: `Dear ${empName},\n\nYour joining registration form has been successfully submitted.\n\nWelcome to the team!\n\nBest Regards,\nHR Team`,
+              documents: JSON.stringify([])
+            })
+          });
+        }
+      } catch (emailErr) {
+        console.warn('Failed to send joining registration email:', emailErr);
+      }
+
       toast.dismiss(toastId);
       toast.success(`Employee ${joiningFormData.nameAsPerAadhar || selectedItem.candidateName} registered successfully!`);
       setShowJoiningModal(false);
@@ -562,7 +584,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
       designation: item.applyingForPost || '',
       currentAddress: item.presentAddress || '',
       dobAsPerAadhar: item.candidateDOB || '',
-      gender: '',
+      gender: item.gender || '',
       mobileNo: item.candidatePhone || '',
       familyMobileNo: '',
       relationshipWithFamily: '',
@@ -590,6 +612,36 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
       panCardPhoto: null,
     });
     setShowJoiningModal(true);
+  };
+
+  const handleShareSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    const toastId = toast.loading('Sending invitation email...');
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          action: 'shareViaEmail',
+          recipientEmail: shareFormData.recipientEmail,
+          subject: shareFormData.subject,
+          message: shareFormData.message,
+          documents: JSON.stringify([])
+        }),
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Failed to send email');
+
+      toast.success('Invitation email sent successfully!', { id: toastId });
+      setShowShareModal(false);
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error(`Error: ${error.message}`, { id: toastId });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleShareClick = (item) => {
@@ -817,6 +869,13 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                                     className="bg-indigo-600 text-white px-3 py-1 rounded-md text-xs hover:bg-indigo-700 transition-all shadow-sm active:scale-95"
                                   >
                                     Join
+                                  </button>
+                                  <button
+                                    onClick={() => handleShareClick(item)}
+                                    className="bg-emerald-500 text-white p-1.5 rounded-md hover:bg-emerald-600 transition-all shadow-sm active:scale-95 flex items-center justify-center"
+                                    title="Share Onboarding"
+                                  >
+                                    <Share size={12} />
                                   </button>
                                 </div>
                               </td>
@@ -1135,14 +1194,14 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                       ))}
                     </select>
                   </div>
-                  <div className="space-y-1">
+                  {/* <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Registration Under</label>
                     <input type="text" value={joiningFormData.registrationUnder} onChange={(e) => setJoiningFormData({ ...joiningFormData, registrationUnder: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Reporting To</label>
                     <input type="text" value={joiningFormData.reportingTo} onChange={(e) => setJoiningFormData({ ...joiningFormData, reportingTo: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -1306,9 +1365,15 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                 Discard
               </button>
               <button
-                className="px-6 py-2 bg-emerald-500 rounded-xl text-xs font-bold text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
+                onClick={handleShareSubmit}
+                disabled={submitting}
+                className="px-6 py-2 bg-emerald-500 rounded-xl text-xs font-bold text-white hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Send Invite
+                {submitting ? (
+                  <><Clock size={12} className="animate-spin" /> Sending...</>
+                ) : (
+                  'Send Invite'
+                )}
               </button>
             </div>
           </div>

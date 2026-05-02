@@ -28,6 +28,10 @@ import LeaveApproval from './pages/admin/LeaveApproval';
 import AttendanceForm from './pages/user/AttendanceForm';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import Reimbursement from './pages/admin/Reimbursement';
+import GatePass from './pages/GatePass';
+import GatePassRequest from './pages/GatePassRequest';
+import VisitorApproval from './pages/admin/VisitorApproval';
+import CloseGatePass from './pages/admin/CloseGatePass';
 
 function App() {
   return (
@@ -42,29 +46,33 @@ function App() {
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<Dashboard />} />
-            <Route path="indent" element={<Indent />} />
-            <Route path="find-enquiry" element={<FindEnquiry />} />
-            <Route path="call-tracker" element={<CallTracker />} />
-            <Route path='joining' element={<Joining />} />
-            <Route path="after-joining-work" element={<AfterJoiningWork />} />
-            <Route path="leaving" element={<Leaving />} />
-            <Route path="after-leaving-work" element={<AfterLeavingWork />} />
-            <Route path="employee" element={<Employee />} />
-            <Route path="my-profile" element={<MyProfile />} />
-            <Route path="my-attendance" element={<MyAttendance />} />
-            <Route path="attendance-form" element={<AttendanceForm />} />
-            <Route path="attendance/daily" element={<AttendanceDaily />} />
-            <Route path="attendance/monthly" element={<Attendance />} />
+            <Route index element={<ProtectedRoute allowedRoles={['admin']}><Dashboard /></ProtectedRoute>} />
+            <Route path="indent" element={<ProtectedRoute allowedRoles={['admin']}><Indent /></ProtectedRoute>} />
+            <Route path="find-enquiry" element={<ProtectedRoute allowedRoles={['admin']}><FindEnquiry /></ProtectedRoute>} />
+            <Route path="call-tracker" element={<ProtectedRoute allowedRoles={['admin']}><CallTracker /></ProtectedRoute>} />
+            <Route path='joining' element={<ProtectedRoute allowedRoles={['admin']}><Joining /></ProtectedRoute>} />
+            <Route path="after-joining-work" element={<ProtectedRoute allowedRoles={['admin']}><AfterJoiningWork /></ProtectedRoute>} />
+            <Route path="leaving" element={<ProtectedRoute allowedRoles={['admin']}><Leaving /></ProtectedRoute>} />
+            <Route path="after-leaving-work" element={<ProtectedRoute allowedRoles={['admin']}><AfterLeavingWork /></ProtectedRoute>} />
+            <Route path="employee" element={<ProtectedRoute allowedRoles={['admin']}><Employee /></ProtectedRoute>} />
+            <Route path="my-profile" element={<ProtectedRoute allowedRoles={['user']}><MyProfile /></ProtectedRoute>} />
+            <Route path="my-attendance" element={<ProtectedRoute allowedRoles={['user']}><MyAttendance /></ProtectedRoute>} />
+            <Route path="attendance-form" element={<ProtectedRoute allowedRoles={['user']}><AttendanceForm /></ProtectedRoute>} />
+            <Route path="attendance/daily" element={<ProtectedRoute allowedRoles={['admin']}><AttendanceDaily /></ProtectedRoute>} />
+            <Route path="attendance/monthly" element={<ProtectedRoute allowedRoles={['admin']}><Attendance /></ProtectedRoute>} />
             <Route path="reimbursement" element={<Reimbursement />} />
-            <Route path="leave-request" element={<LeaveRequest />} />
+            <Route path="leave-request" element={<ProtectedRoute allowedRoles={['user']}><LeaveRequest /></ProtectedRoute>} />
+            <Route path="gate-pass" element={<ProtectedRoute allowedRoles={['admin']}><GatePass /></ProtectedRoute>} />
+            <Route path="gate-pass-request" element={<ProtectedRoute allowedRoles={['user']}><GatePassRequest /></ProtectedRoute>} />
+            <Route path="visitor-approval" element={<ProtectedRoute allowedRoles={['admin', 'user']}><VisitorApproval /></ProtectedRoute>} />
+            <Route path="close-gate-pass" element={<ProtectedRoute allowedRoles={['admin']}><CloseGatePass /></ProtectedRoute>} />
             <Route path="noc" element={<NOC />} />
             <Route path="feedback" element={<Feedback />} />
             <Route path="company-calendar" element={<CompanyCalendar />} />
-            <Route path="leave-management" element={<LeaveManagement />} />
-            <Route path="admin-attendance" element={<AdminAttendance />} />
+            <Route path="leave-management" element={<ProtectedRoute allowedRoles={['admin']}><LeaveManagement /></ProtectedRoute>} />
+            <Route path="admin-attendance" element={<ProtectedRoute allowedRoles={['admin']}><AdminAttendance /></ProtectedRoute>} />
             <Route path="license" element={<License />} />
-            <Route path='leaveApproval' element={<LeaveApproval />} />
+            <Route path='leaveApproval' element={<ProtectedRoute allowedRoles={['admin']}><LeaveApproval /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

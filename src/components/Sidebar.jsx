@@ -8,6 +8,7 @@ import {
   UserCheck,
   UserX,
   UserMinus,
+  CheckCircle2,
   AlarmClockCheck,
   Users,
   Calendar,
@@ -26,17 +27,21 @@ import {
   Bell,
   Clock,
   IndianRupee,
-  MessageSquare
+  MessageSquare,
+  DoorClosed
 } from 'lucide-react';
+import { getStoredUser, isAdminUser } from '../utils/auth';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const [showLeaveManagement, setShowLeaveManagement] = useState(false);
-  const userString = localStorage.getItem('user');
-  const user = userString ? JSON.parse(userString) : null;
+  const user = getStoredUser();
+  const isAdmin = isAdminUser(user);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('employeeId');
+    sessionStorage.removeItem('role');
     navigate('/login', { replace: true });
   };
 
@@ -60,11 +65,11 @@ const Sidebar = ({ isOpen, onClose }) => {
           }
         }
       } catch (error) {
-        setShowLeaveManagement(user?.Admin?.toLowerCase() === 'yes');
+        setShowLeaveManagement(isAdmin);
       }
     };
     checkLeaveManagementAccess();
-  }, [user]);
+  }, [isAdmin, user]);
 
   const [attendanceOpen, setAttendanceOpen] = useState(true);
 
@@ -94,6 +99,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/leave-management', icon: BookPlus, label: 'Leave Mgmt' },
     { path: '/noc', icon: FileText, label: '108 NOC' },
     { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
+    { path: '/visitor-approval', icon: CheckCircle2, label: 'Request Approval' },
+    { path: '/close-gate-pass', icon: DoorClosed, label: 'Close Gate Pass' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
   ];
@@ -104,13 +111,15 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/my-attendance', icon: Clock, label: 'My Attendance' },
     { path: '/reimbursement', icon: IndianRupee, label: 'Reimbursement' },
     { path: '/leave-request', icon: LeaveIcon, label: 'Leave Request' },
+    // { path: '/gate-pass-request', icon: Bell, label: 'Gate Pass' },
     { path: '/noc', icon: FileText, label: '108 NOC' },
     { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
+    { path: '/visitor-approval', icon: CheckCircle2, label: 'Visitor Requests' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
   ];
 
-  const menuItems = user?.Admin?.toLowerCase() === 'yes' ? adminMenuItems : employeeMenuItems;
+  const menuItems = isAdmin ? adminMenuItems : employeeMenuItems;
 
   return (
     <>
@@ -203,7 +212,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{user?.Name || 'Guest User'}</p>
-                <p className="text-xs text-slate-400 truncate">{user?.Admin === 'Yes' ? 'Administrator' : 'Employee'}</p>
+                <p className="text-xs text-slate-400 truncate">{isAdmin ? 'Administrator' : 'Employee'}</p>
               </div>
             </div>
             <button

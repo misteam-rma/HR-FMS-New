@@ -3,11 +3,11 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import Footer from './Footer';
+import { getStoredUser } from '../utils/auth';
 
 const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const userString = localStorage.getItem('user');
-  const user = userString ? JSON.parse(userString) : null;
+  const user = getStoredUser();
 
   return (
     <div className="flex min-h-screen bg-slate-50">

@@ -895,7 +895,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
       const updatePromises = [];
 
       const updateCol = (colIdx, val) => {
-        if (colIdx === -1) return;
+        if (colIdx === -1 || colIdx === 33) return; // Column AH (index 33) is restricted from submission
         updatePromises.push(
           fetch(
             import.meta.env.VITE_APPS_SCRIPT_URL,

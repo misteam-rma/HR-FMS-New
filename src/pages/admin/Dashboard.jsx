@@ -24,7 +24,8 @@ import {
   Briefcase,
   Layers,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Gift
 } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 
@@ -36,6 +37,8 @@ const Dashboard = () => {
   const [monthlyHiringData, setMonthlyHiringData] = useState([]);
   const [designationData, setDesignationData] = useState([]);
   const [departmentData, setDepartmentData] = useState([]);
+  const [statusRatio, setStatusRatio] = useState({ active: 0, left: 0 });
+  const [upcomingBirthdays, setUpcomingBirthdays] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fallback Logic
@@ -51,31 +54,164 @@ const Dashboard = () => {
   const displayDesigData = designationData.length > 0 ? designationData : [];
 
   const displayStatusData = useMemo(() => [
-    { name: 'Active', value: activeEmployee || 0, color: '#2563eb' },
-    { name: 'Resigned', value: leftEmployee || 0, color: '#cbd5e1' }
-  ], [activeEmployee, leftEmployee]);
+    { name: 'Active', value: statusRatio.active || 0, color: '#2563eb' },
+    { name: 'Resigned', value: statusRatio.left || 0, color: '#cbd5e1' }
+  ], [statusRatio]);
 
-  // Parse DD/MM/YYYY format date
+  // Parse DD/MM/YYYY or DD-MMM-YY format date
   const parseSheetDate = (dateStr) => {
     if (!dateStr) return null;
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1;
-    const year = parseInt(parts[2], 10);
-    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
-    return new Date(year, month, day);
+    
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+          return new Date(year, month, day);
+        }
+      }
+    }
+    
+    // Fallback for standard formats like '2-May-26' or '3-January-00'
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+    
+    return null;
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // ... fetching logic (omitted for brevity in this mock, but I'll keep the actual structure)
-        // For now, I'll simulate a slight delay or just let the existing logic run
-        const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`);
-        const result = await response.json();
-        // ... parse data and set states
+        const [joiningResponse, enquiryResponse] = await Promise.all([
+          fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`),
+          fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`)
+        ]);
+        
+        const result = await joiningResponse.json();
+        const enquiryResult = await enquiryResponse.json();
+        
+        if (result.success && result.data && result.data.length > 6) {
+          const rows = result.data.slice(6);
+          // Active employees don't have a planned leaving date (row[31])
+          const activeRows = rows.filter(row => !row[31] || row[31].toString().trim() === '');
+          
+          let fullTimeCount = 0;
+          let articleCount = 0;
+          let internCount = 0;
+          
+          let deptCounts = {};
+          let desigCounts = {};
+          let monthlyDataMap = {};
+          let upcomingBdays = [];
+          let tActive = 0;
+          let tLeft = 0;
+
+          // Initialize last 6 months for monthly chart
+          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const today = new Date();
+          const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+          for(let i = 5; i >= 0; i--) {
+            const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const mName = monthNames[d.getMonth()];
+            monthlyDataMap[mName] = { month: mName, hired: 0, left: 0, year: d.getFullYear(), mIndex: d.getMonth() };
+          }
+
+          rows.forEach(row => {
+            const isLeft = row[31] && row[31].toString().trim() !== '';
+            if (isLeft) tLeft++;
+            else tActive++;
+
+            if (!isLeft) {
+              const empType = (row[3] || '').toString().toLowerCase().trim();
+              if (empType.includes('full time') || empType.includes('fulltime')) fullTimeCount++;
+              else if (empType.includes('article')) articleCount++;
+              else if (empType.includes('intern')) internCount++;
+
+              const dept = (row[4] || '').toString().trim();
+              const desig = (row[5] || '').toString().trim();
+              if (dept) deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+              if (desig) desigCounts[desig] = (desigCounts[desig] || 0) + 1;
+
+              }
+
+            // Monthly Data Processing
+            const dojStr = row[19];
+            if (dojStr) {
+                const d = parseSheetDate(dojStr);
+                if (d && monthlyDataMap[monthNames[d.getMonth()]] && monthlyDataMap[monthNames[d.getMonth()]].year === d.getFullYear()) {
+                    monthlyDataMap[monthNames[d.getMonth()]].hired++;
+                }
+            }
+            const dolStr = row[31];
+            if (dolStr && isLeft) {
+                const d = parseSheetDate(dolStr);
+                if (d && monthlyDataMap[monthNames[d.getMonth()]] && monthlyDataMap[monthNames[d.getMonth()]].year === d.getFullYear()) {
+                    monthlyDataMap[monthNames[d.getMonth()]].left++;
+                }
+            }
+          });
+          
+          // Process Birthdays from ENQUIRY sheet
+          if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 6) {
+            const enquiryRows = enquiryResult.data.slice(6);
+            enquiryRows.forEach(row => {
+              const dobStr = row[7]; // DOB is in Column H (Index 7) in ENQUIRY
+              if (dobStr) {
+                const d = parseSheetDate(dobStr);
+                
+                if (d) {
+                  const bMonth = d.getMonth() + 1;
+                  const bDay = d.getDate();
+                  const bdayThisYear = new Date(today.getFullYear(), bMonth - 1, bDay);
+                  let diffDays = Math.ceil((bdayThisYear.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
+                  
+                  if (diffDays < 0) {
+                    const bdayNextYear = new Date(today.getFullYear() + 1, bMonth - 1, bDay);
+                    diffDays = Math.ceil((bdayNextYear.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
+                  }
+                  
+                  if (diffDays >= 0 && diffDays <= 5) {
+                    upcomingBdays.push({
+                      name: row[6] || 'Unknown', // Candidate Name is Column G (Index 6)
+                      department: (row[5] || '').toString().trim(), // Department is Column F (Index 5)
+                      dateStr: `${bDay} ${monthNames[bMonth - 1]}`,
+                      daysLeft: diffDays,
+                      photo: '' // Photo column might not be standard in ENQUIRY, leave blank to use initials
+                    });
+                  }
+                }
+              }
+            });
+          }
+          
+          // Map counts to the existing state variables to minimize changes
+          setTotalEmployee(fullTimeCount); 
+          setActiveEmployee(articleCount);
+          setLeftEmployee(internCount);
+          setLeaveThisMonth(tActive); 
+          setStatusRatio({ active: tActive, left: tLeft });
+
+          const formattedDept = Object.keys(deptCounts).map(k => ({ department: k, employees: deptCounts[k] })).sort((a,b) => b.employees - a.employees).slice(0, 6);
+          setDepartmentData(formattedDept);
+
+          const formattedDesig = Object.keys(desigCounts).map(k => ({ designation: k, employees: desigCounts[k] })).sort((a,b) => b.employees - a.employees).slice(0, 6);
+          setDesignationData(formattedDesig);
+
+          const formattedMonthly = Object.values(monthlyDataMap).sort((a, b) => {
+             if(a.year !== b.year) return a.year - b.year;
+             return a.mIndex - b.mIndex;
+          });
+          setMonthlyHiringData(formattedMonthly);
+
+          upcomingBdays.sort((a, b) => a.daysLeft - b.daysLeft);
+          setUpcomingBirthdays(upcomingBdays);
+        }
       } catch (error) {
         console.error("Dashboard Fetch Error:", error);
       } finally {
@@ -110,6 +246,36 @@ const Dashboard = () => {
     return <LoadingSpinner message="Aggregating workforce metrics..." fullPage={true} />;
   }
 
+  const handleGenerateReport = () => {
+    window.print();
+  };
+
+  const handleExportAnalytics = () => {
+    const csvRows = [];
+    csvRows.push("Metric,Value");
+    csvRows.push(`Total Employee (Full Time),${displayStats.total}`);
+    csvRows.push(`Articles,${displayStats.active}`);
+    csvRows.push(`Interns,${displayStats.left}`);
+    csvRows.push(`Total Active,${displayStats.leaves}`);
+    csvRows.push("");
+    
+    csvRows.push("Department,Employee Count");
+    departmentData.forEach(d => csvRows.push(`"${d.department}",${d.employees}`));
+    
+    csvRows.push("");
+    csvRows.push("Role,Employee Count");
+    designationData.forEach(d => csvRows.push(`"${d.designation}",${d.employees}`));
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `hr_analytics_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-4 pb-12 font-outfit">
       {/* Welcome Header */}
@@ -119,10 +285,16 @@ const Dashboard = () => {
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mt-1">Real-time workforce intelligence & metrics</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 bg-white border border-gray-200 rounded text-[10px] font-bold text-gray-500 uppercase tracking-wider hover:bg-gray-50 transition-all shadow-sm">
+          <button 
+            onClick={handleGenerateReport}
+            className="px-3 py-1.5 bg-white border border-gray-200 rounded text-[10px] font-bold text-gray-500 uppercase tracking-wider hover:bg-gray-50 transition-all shadow-sm"
+          >
             Generate Report
           </button>
-          <button className="px-3 py-1.5 bg-indigo-600 text-white rounded text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">
+          <button 
+            onClick={handleExportAnalytics}
+            className="px-3 py-1.5 bg-indigo-600 text-white rounded text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+          >
             Export Analytics
           </button>
         </div>
@@ -131,24 +303,24 @@ const Dashboard = () => {
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard 
-          title="Total Personnel" 
+          title="Total Employee (Full Time)" 
           value={displayStats.total} 
+          icon={Briefcase} 
+        />
+        <StatCard 
+          title="Articles" 
+          value={displayStats.active} 
           icon={Users} 
         />
         <StatCard 
-          title="Active Count" 
-          value={displayStats.active} 
+          title="Interns" 
+          value={displayStats.left} 
           icon={UserCheck} 
         />
         <StatCard 
-          title="Attrition" 
-          value={displayStats.left} 
-          icon={UserX} 
-        />
-        <StatCard 
-          title="Absent/Leave" 
+          title="Total Active" 
           value={displayStats.leaves} 
-          icon={Clock} 
+          icon={Layers} 
         />
       </div>
 
@@ -301,6 +473,45 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
+
+      {/* Upcoming Birthdays Section */}
+      <div className="mt-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-2 mb-6 px-1">
+          <Gift size={16} className="text-rose-500" />
+          <h2 className="text-xs font-bold text-gray-800 uppercase tracking-widest">Upcoming Birthdays (Next 5 Days)</h2>
+        </div>
+        
+        {upcomingBirthdays.length === 0 ? (
+          <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
+             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">No birthdays in the next 5 days.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {upcomingBirthdays.map((bday, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-md transition-all group">
+                 {bday.photo ? (
+                    <img src={bday.photo} alt={bday.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                 ) : (
+                    <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-black text-sm">
+                       {bday.name.charAt(0)}
+                    </div>
+                 )}
+                 <div className="overflow-hidden">
+                    <p className="text-xs font-bold text-gray-900 truncate">{bday.name}</p>
+                    <p className="text-[10px] font-medium text-gray-500 truncate mb-1">{bday.department || 'Staff'}</p>
+                    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
+                       bday.daysLeft === 0 ? 'bg-rose-500 text-white animate-pulse' : 
+                       bday.daysLeft === 1 ? 'bg-orange-100 text-orange-600' : 
+                       'bg-indigo-50 text-indigo-600'
+                    }`}>
+                       {bday.daysLeft === 0 ? 'Today!' : bday.daysLeft === 1 ? 'Tomorrow' : `In ${bday.daysLeft} days (${bday.dateStr})`}
+                    </span>
+                 </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

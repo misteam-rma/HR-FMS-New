@@ -6,6 +6,7 @@ import useAuthStore from '../store/authStore';
 import LoadingSpinner from '../components/LoadingSpinner';
 import logo from '../Assets/RMAALL.png';
 import officeBg from '../Assets/office-bg.png';
+import { normalizeRole } from '../utils/auth';
 
 const SHEET_API_URL = `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`;
 const LEAVING_API_URL = `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`;
@@ -94,18 +95,22 @@ const Login = () => {
       toast.success('Login successful!');
       
       // Normalize user object for backward compatibility with other components
+      const normalizedRole = normalizeRole(matchedUserRow[11]);
       const normalizedUser = {
         ...matchedUser,
-        Admin: matchedUserRow[11]?.toString().trim().toLowerCase() === 'admin' ? 'Yes' : 'No',
+        Admin: normalizedRole === 'admin' ? 'Yes' : 'No',
+        Role: normalizedRole,
+        role: normalizedRole,
         Code: matchedUserRow[6],
         Name: matchedUserRow[2]
       };
 
       localStorage.setItem('user', JSON.stringify(normalizedUser));
+      localStorage.setItem('employeeId', matchedUserRow[6]?.toString().trim() || '');
+      sessionStorage.setItem('role', normalizedRole);
       login(normalizedUser);
 
-      const adminStatus = matchedUserRow[11] ? matchedUserRow[11].toString().trim().toLowerCase() : 'no';
-      if (adminStatus === "admin") {
+      if (normalizedRole === 'admin') {
         navigate("/", { replace: true });
       } else {
         navigate("/my-profile", { replace: true });
