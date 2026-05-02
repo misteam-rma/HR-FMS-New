@@ -153,15 +153,26 @@ const processedHistory = dataRows
   })
   .map((row, index) => ({
     rowIndex: index + 7,
-    employeeNo: row[1] || '',
+    employeeId: row[1] || '',
     enquiryNo: row[2] || '',
-    candidateName: row[6] || '',
+    indentType: row[3] || '',
+    name: row[6] || '',
     department: row[4] || '',
     designation: row[5] || '',
     dateOfJoining: row[19] || '',
+    mobileNo: row[9] || '',
+    leavingDate: row[31] || '',
+    reasonOfLeaving: 'Exit Processed',
+    firmName: getIndex("Firm Name") !== -1 ? row[getIndex("Firm Name")] : '',
+    fatherName: getIndex("Father / Husband name") !== -1 ? row[getIndex("Father / Husband name")] : '',
+    workingLocation: getIndex("Working Location") !== -1 ? row[getIndex("Working Location")] : '',
   }));
 
-setHistoryData(processedHistory);
+setHistoryData(prev => {
+  const existingIds = new Set(prev.map(p => p.employeeId));
+  const filteredNew = processedHistory.filter(p => !existingIds.has(p.employeeId));
+  return [...prev, ...filteredNew];
+});
 
       }
     } catch (err) {
@@ -199,10 +210,15 @@ setHistoryData(processedHistory);
           workingLocation: row[9] || '',
           designation: row[10] || '',
           department: row[11] || '',
-          enquiryNo: row[22] || '', // Column W
-          indentType: row[23] || '', // Column X
+          enquiryNo: row[22] || '',
+          indentType: row[23] || '',
         }));
-        setHistoryData(processed);
+        
+        setHistoryData(prev => {
+          // Priority: LEAVING sheet data should replace JOINING sheet data for the same ID
+          const otherData = prev.filter(p => !processed.find(newP => newP.employeeId === p.employeeId));
+          return [...otherData, ...processed];
+        });
       }
     } catch (err) { console.error("fetchLeavingData Error:", err); }
   };
@@ -537,7 +553,7 @@ setHistoryData(processedHistory);
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Enquiry No.</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Indent Type</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Name As Per Aadhar</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Father / Husband name</th>
+                          {/* <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Father / Husband name</th> */}
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Date Of Joining</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Designation</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Aadhar Frontside</th>
@@ -550,12 +566,12 @@ setHistoryData(processedHistory);
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Relationship</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Bank A.C No.</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">IFSC Code</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Branch Name</th>
+                          {/* <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Branch Name</th> */}
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Bank Passbook</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Personal Email</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Qualification</th>
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Department</th>
-                          <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Equipment</th>
+                          {/* <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Equipment</th> */}
                           <th className="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Aadhar Card No</th>
                         </tr>
                       </thead>
@@ -587,7 +603,7 @@ setHistoryData(processedHistory);
                                 <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-[10px] font-bold uppercase tracking-wider">{item.indentType || 'N/A'}</span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 font-bold">{item.candidateName}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">{item.fatherName}</td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-600">{item.fatherName}</td> */}
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.dateOfJoining}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                                 <span className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full text-[10px] font-bold uppercase">{item.designation}</span>
@@ -606,14 +622,14 @@ setHistoryData(processedHistory);
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.relationship}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-mono tracking-tighter">{item.bankAccount}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-mono">{item.ifscCode}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.branchName}</td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.branchName}</td> */}
                               <td className="px-6 py-4 whitespace-nowrap text-center">
                                 <PhotoCell url={item.bankPassbookPhoto} label="Passbook" />
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-indigo-500 font-medium lowercase tracking-tighter">{item.personalEmail}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.qualification}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-bold tracking-tight">{item.department}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 tracking-tighter">{item.equipment}</td>
+                              {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 tracking-tighter">{item.equipment}</td> */}
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-bold font-mono">{item.aadharCardNo}</td>
                             </tr>
                           ))
