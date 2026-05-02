@@ -12,7 +12,14 @@ const CompanyCalendar = () => {
   const [companyEvents, setCompanyEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newEvent, setNewEvent] = useState({ date: '', title: '' });
+  const [newEvent, setNewEvent] = useState({ 
+    title: '', 
+    date: '', 
+    time: '', 
+    location: '', 
+    type: 'Event', 
+    description: '' 
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddEvent = async (e) => {
@@ -21,13 +28,17 @@ const CompanyCalendar = () => {
     try {
       const rowData = [
         new Date().toLocaleString('en-IN'),
-        newEvent.date,
-        newEvent.title
+        newEvent.title,       // Column B (index 1)
+        newEvent.date,        // Column C (index 2)
+        newEvent.time,        // Column D (index 3)
+        newEvent.location,    // Column E (index 4)
+        newEvent.type,        // Column F (index 5)
+        newEvent.description  // Column G (index 6)
       ];
 
       const formData = new URLSearchParams();
       formData.append('action', 'insert');
-      formData.append('sheetName', 'Calendar');
+      formData.append('sheetName', 'CompanyCalendar');
       formData.append('rowData', JSON.stringify(rowData));
 
       const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
@@ -39,7 +50,14 @@ const CompanyCalendar = () => {
       if (result.success) {
         toast.success("Event added successfully");
         setShowAddModal(false);
-        setNewEvent({ date: '', title: '' });
+        setNewEvent({ 
+          title: '', 
+          date: '', 
+          time: '', 
+          location: '', 
+          type: 'Event', 
+          description: '' 
+        });
         fetchCalendarData();
       } else {
         toast.error("Failed to add event");
@@ -56,7 +74,7 @@ const CompanyCalendar = () => {
     setLoading(true);
     try {
       const [calendarRes, enquiryRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Calendar&action=fetch`)
+        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=CompanyCalendar&action=fetch`)
           .then(res => res.ok ? res.json() : { success: false, data: [] })
           .catch(() => ({ success: false, data: [] })),
         fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`)
@@ -73,8 +91,8 @@ const CompanyCalendar = () => {
         
         const processedEvents = dataRows.map((row, index) => {
           let formattedDate = '';
-          if (row[1]) { // Date is Column B (index 1) for Calendar sheet
-            const dateStr = row[1];
+          if (row[2]) { // Date is now Column C (index 2)
+            const dateStr = row[2];
             if (dateStr.includes('-') && dateStr.split('-').length === 3) {
                 formattedDate = dateStr; 
             } else {
@@ -92,11 +110,12 @@ const CompanyCalendar = () => {
           return {
             id: `evt-${index}`,
             timestamp: row[0] || '',
-            title: row[2] || 'Event', // Events in Column C
             date: formattedDate,
-            type: 'event',
-            time: '',
-            location: ''
+            title: row[1] || 'Event', // Title is now Column B (index 1)
+            time: row[3] || '',
+            location: row[4] || '',
+            type: row[5] || 'Event',
+            description: row[6] || ''
           };
         }).filter(e => e.date && e.title);
         
@@ -420,41 +439,93 @@ const CompanyCalendar = () => {
             </button>
             <h2 className="text-xl font-bold text-slate-800 mb-6">Add New Event</h2>
             <form onSubmit={handleAddEvent} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Event Date</label>
-                <input 
-                  type="date" 
-                  required
-                  value={newEvent.date}
-                  onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-medium"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Event Date*</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={newEvent.date}
+                    onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Event Time</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 10:00 AM or All Day"
+                    value={newEvent.time}
+                    onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-semibold"
+                  />
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Event Details</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Event Title*</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="e.g. Monthly Townhall, Public Holiday"
+                  placeholder="Enter event title"
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm font-medium"
+                  className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-semibold"
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Location</label>
+                  <input 
+                    type="text" 
+                    placeholder="Office, Zoom, etc."
+                    value={newEvent.location}
+                    onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Event Type</label>
+                  <select 
+                    value={newEvent.type}
+                    onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-bold appearance-none cursor-pointer"
+                  >
+                    <option value="Meeting">Meeting</option>
+                    <option value="Holiday">Holiday</option>
+                    <option value="Training">Training</option>
+                    <option value="Review">Review</option>
+                    <option value="Event">Event</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Description</label>
+                <textarea 
+                  rows="3"
+                  placeholder="Brief description of the event"
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  className="w-full px-4 py-2 bg-slate-50 border border-transparent rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/5 transition-all outline-none text-sm font-semibold resize-none"
+                />
+              </div>
+
               <div className="pt-4 flex justify-end space-x-3">
                 <button 
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-bold text-sm"
+                  className="px-6 py-2.5 bg-slate-50 text-slate-500 rounded-xl font-bold text-sm hover:bg-slate-100 transition-all active:scale-95 border border-slate-200"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition-colors font-bold text-sm shadow-md shadow-indigo-100 flex items-center"
+                  className="px-8 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-100 hover:bg-indigo-700 hover:scale-105 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Adding...' : 'Add Event'}
+                  {isSubmitting ? 'Adding...' : 'Save Event'}
                 </button>
               </div>
             </form>
