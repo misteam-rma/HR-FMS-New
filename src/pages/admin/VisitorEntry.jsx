@@ -161,6 +161,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
         showToast("Photo captured!", "success");
 
         if ("geolocation" in navigator) {
+          showToast("Fetching location...", "success");
           navigator.geolocation.getCurrentPosition(
             async (position) => {
               const { latitude, longitude } = position.coords;
@@ -183,14 +184,21 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
                 const address = parts.length >= 3 ? parts.join(", ") : (data.display_name || parts.join(", "));
                 if (address) {
                   setFormData((prev) => ({ ...prev, visitorAddress: address }));
+                  showToast("Address identified!", "success");
                 }
               } catch (error) {
                 console.error("Error fetching location:", error);
+                showToast("Address lookup failed", "error");
               }
             },
-            () => { },
+            (err) => { 
+              console.error("GPS Error:", err);
+              showToast("GPS access denied or timed out", "error");
+            },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
           );
+        } else {
+          showToast("Geolocation not supported", "error");
         }
       },
       "image/jpeg",
