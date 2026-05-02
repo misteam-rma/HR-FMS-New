@@ -30,6 +30,10 @@ export const fetchVisitsForApprovalApi = async () => {
           if (headerLower === 'time of entry') obj.timeOfEntry = row[i];
           if (headerLower === 'visitor photo') obj.photo = row[i];
           if (headerLower === 'status') obj.status = row[i];
+          
+          // Explicitly map Column F (index 5) to photo
+          if (i === 5) obj.photo = row[i];
+
           if (headerLower === 'timestamp') {
             obj.timestamp = row[i];
             if (row[i] && row[i].includes(',')) {
@@ -87,13 +91,25 @@ export const createVisitRequestApi = async (data) => {
       
       const uploadResult = await uploadResponse.json();
       if (uploadResult.success && uploadResult.fileUrl) {
-        // Extract file ID from the backend's returned URL if needed, 
-        // but here we can use the direct URL provided
-        photoUrl = uploadResult.fileUrl;
+        const fileId = uploadResult.fileUrl.split('id=')[1];
+        photoUrl = fileId 
+          ? `https://drive.google.com/file/d/${fileId}/view?usp=sharing`
+          : uploadResult.fileUrl;
+      } else {
+        // Fallback to base64 if upload fails
+        photoUrl = base64Photo;
       }
     } catch (err) {
       console.error("Error uploading visitor photo:", err);
-      // Fallback or continue with empty URL
+      // Fallback to base64 on error
+      try {
+        const base64Photo = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(data.photoFile);
+        });
+        photoUrl = base64Photo;
+      } catch (e) {}
     }
   }
 

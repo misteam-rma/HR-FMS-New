@@ -32,11 +32,13 @@ const VisitorApproval = () => {
     const [showFormModal, setShowFormModal] = useState(false);
     const [updatingStatus, setUpdatingStatus] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
+    const [previewImage, setPreviewImage] = useState(null);
 
     const getDriveDirectLink = (url) => {
         if (!url || !url.includes('drive.google.com')) return url;
         const fileId = url.match(/\/d\/([^\/]+)/)?.[1] || url.match(/id=([^\&]+)/)?.[1];
-        return fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : url;
+        // Using thumbnail service which is often more reliable for direct display
+        return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000` : url;
     };
 
     const fetchAllData = useCallback(async (isPolling = false) => {
@@ -282,7 +284,12 @@ const VisitorApproval = () => {
                                             <div className="flex items-center gap-4">
                                                 <div className="h-11 w-11 rounded-xl bg-slate-100 border-2 border-white ring-1 ring-slate-200 overflow-hidden flex items-center justify-center">
                                                     {visit.photo ? (
-                                                        <img src={getDriveDirectLink(visit.photo)} className="h-full w-full object-cover" alt="Visitor" />
+                                                        <img 
+                                                          src={getDriveDirectLink(visit.photo)} 
+                                                          className="h-full w-full object-cover cursor-pointer hover:scale-110 transition-transform" 
+                                                          alt="Visitor"
+                                                          onClick={() => setPreviewImage(getDriveDirectLink(visit.photo))}
+                                                        />
                                                     ) : (
                                                         <User size={18} className="text-slate-300" />
                                                     )}
@@ -328,6 +335,23 @@ const VisitorApproval = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Photo Preview Modal */}
+            {previewImage && (
+                <div className="fixed inset-0 z-[100] bg-slate-950/60 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setPreviewImage(null)}>
+                    <div className="relative max-w-lg w-full bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        <button 
+                            onClick={() => setPreviewImage(null)}
+                            className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white rounded-full text-slate-900 shadow-lg z-10"
+                        >
+                            <X size={20} />
+                        </button>
+                        <div className="p-2">
+                           <img src={previewImage} alt="Visitor Preview" className="w-full h-auto rounded-2xl" />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal - Aligned with HR system style */}
             {showFormModal && (
