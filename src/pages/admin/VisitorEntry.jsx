@@ -231,7 +231,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh, isPublic = false })
         } catch (e) {}
       }
 
-      if (!isAdmin) {
+      if (!isAdmin && !isPublic) {
         try {
           const res = await fetchVisitorByMobileApi(value);
           if (res.found) {
