@@ -100,7 +100,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { path: '/noc', icon: FileText, label: '108 NOC' },
     { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
     { path: '/visitor-approval', icon: CheckCircle2, label: 'Request Approval' },
-    { path: '/close-gate-pass', icon: DoorClosed, label: 'Close Gate Pass' },
+    { path: '/close-gate-pass', icon: DoorClosed, label: 'Gate Verification' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: AlarmClockCheck, label: 'License' },
   ];

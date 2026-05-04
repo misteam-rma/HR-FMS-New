@@ -7,20 +7,20 @@ export const fetchGatePassesApi = async () => {
   try {
     const response = await fetch(`${SCRIPT_URL}?action=fetch&sheet=Request Visit`);
     const result = await response.json();
-    
+
     if (result.success && Array.isArray(result.data) && result.data.length > 5) {
       const headers = result.data[5];
       const dataRows = result.data.slice(6);
-      
+
       const mappedPasses = dataRows.map((row, index) => {
         let obj = { id: index + 7, rowIndex: index + 7 }; // Store row index for updates (6 header rows + 1 for 1-based index = +7)
         headers.forEach((header, i) => {
           const headerName = header.toString().trim();
           const key = headerName.toLowerCase().replace(/\s+/g, '_');
           obj[key] = row[i];
-          
+
           const headerLower = headerName.toLowerCase();
-          
+
           if (headerLower === 'visitor name') obj.visitor_name = row[i];
           if (headerLower === 'mobile number') obj.mobile_number = row[i];
           if (headerLower === 'serial no.') obj.serial_no = row[i];
@@ -30,14 +30,14 @@ export const fetchGatePassesApi = async () => {
           if (headerLower === 'visitor photo') obj.visitor_photo = row[i];
           if (headerLower === 'status') obj.status = row[i];
         });
-        
+
         // Map Column O (index 14) and Column P (index 15) explicitly
         obj.colO = row[14] || '';
         obj.colP = row[15] || '';
-        
+
         return obj;
       });
-      
+
       return { success: true, data: { data: mappedPasses } };
     }
     return { success: false, data: { data: [] } };
@@ -53,7 +53,7 @@ export const fetchGatePassesApi = async () => {
 export const closeGatePassApi = async (id) => {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-IN', { hour12: false });
-  
+
   const timeFormData = new URLSearchParams();
   timeFormData.append('action', 'updateCell');
   timeFormData.append('sheetName', 'Request Visit');

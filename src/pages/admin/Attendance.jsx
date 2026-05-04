@@ -200,77 +200,140 @@ const Attendance = () => {
         </div>
       </div>
 
-      {/* 📊 Main Table Content Area - Call Tracker Absolute Mirroring */}
-      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col">
+      {/* 📊 Main Content Area */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col shadow-sm">
         {tableLoading ? (
            <div className="flex-1 flex items-center justify-center p-12">
              <LoadingSpinner message="Auditing monthly..." minHeight="450px" />
            </div>
         ) : (
           <>
-            <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee Name</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Analytics Month</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Net Present</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total Absents</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late Marks</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late (N)</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Miss Punch</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {currentItems.length === 0 ? (
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <div className="max-h-[calc(105vh-280px)] min-h-[530px] overflow-y-auto scrollbar-hide">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <td colSpan="9" className="px-6 py-24 text-center">
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No history recorded.</p>
-                      </td>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee Name</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Employee ID</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Analytics Month</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Net Present</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total Absents</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late Marks</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late (N)</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Miss Punch</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
                     </tr>
-                  ) : (
-                    currentItems.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-normal uppercase">
-                           {item.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase">#{item.empId}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase tracking-tight">{item.month} {item.year}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-emerald-600 font-normal">{item.punchDays} Days</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.absents}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateDays}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateNotAllowed}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.punchMiss}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Verified' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
-                             {item.status}
-                           </span>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {currentItems.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" className="px-6 py-24 text-center">
+                          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No history recorded.</p>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      currentItems.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-gray-50/50 transition-colors group">
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-normal uppercase">
+                             {item.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase">#{item.empId}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase tracking-tight">{item.month} {item.year}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-emerald-600 font-normal">{item.punchDays} Days</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.absents}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateDays}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateNotAllowed}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.punchMiss}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Verified' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
+                               {item.status}
+                             </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            {/* 📑 Footer Pagination - Call Tracker Mirror */}
-            <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-6 flex-wrap">
-                <p className="text-[13px] text-gray-600 font-medium tracking-wide">
-                  Showing <span className="font-bold text-gray-900">{filteredData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold text-gray-900">{filteredData.length}</span> records
-                </p>
-                <div className="flex items-center gap-2 h-5">
-                  <label className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
-                  <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="text-xs bg-transparent font-medium text-gray-700 outline-none cursor-pointer">
-                    {[15, 30, 50, 100].map(val => <option key={val} value={val}>{val}</option>)}
-                  </select>
+              {/* Desktop Pagination */}
+              <div className="px-4 py-3 bg-white border-t border-gray-200 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-6 flex-wrap">
+                  <p className="text-[13px] text-gray-600 font-medium tracking-wide">
+                    Showing <span className="font-bold text-gray-900">{filteredData.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold text-gray-900">{filteredData.length}</span> records
+                  </p>
+                  <div className="flex items-center gap-2 h-5">
+                    <label className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Rows per page:</label>
+                    <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="text-xs bg-transparent font-medium text-gray-700 outline-none cursor-pointer shadow-none">
+                      {[15, 30, 50, 100].map(val => <option key={val} value={val}>{val}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex items-center w-auto justify-end">
+                  {renderPaginationNav()}
                 </div>
               </div>
-              <div className="flex items-center w-auto justify-end">
-                {renderPaginationNav()}
-              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden flex flex-col h-[calc(105vh-320px)] bg-slate-50">
+                <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                  {currentItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                      <p className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">No monthly logs</p>
+                    </div>
+                  ) : (
+                    currentItems.map((item, idx) => (
+                      <div key={idx} className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 space-y-3 active:bg-slate-50 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{item.empId}</p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                            item.status === 'Verified' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+                          <div className="space-y-0.5">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Present Days</p>
+                             <p className="text-[11px] font-bold text-emerald-600">{item.punchDays} Days</p>
+                          </div>
+                          <div className="space-y-0.5 text-right">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Month</p>
+                             <p className="text-[11px] font-bold text-slate-700 uppercase">{item.month} '{item.year?.toString().slice(-2)}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-2 text-center pt-1">
+                          <div className="space-y-0.5">
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Absents</p>
+                             <p className="text-[11px] font-bold text-slate-600">{item.absents}</p>
+                          </div>
+                          <div className="space-y-0.5">
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Late</p>
+                             <p className="text-[11px] font-bold text-slate-600">{item.lateDays}</p>
+                          </div>
+                          <div className="space-y-0.5">
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Late (N)</p>
+                             <p className="text-[11px] font-bold text-slate-600">{item.lateNotAllowed}</p>
+                          </div>
+                          <div className="space-y-0.5">
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Miss</p>
+                             <p className="text-[11px] font-bold text-slate-600">{item.punchMiss}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="border-t border-gray-200 bg-white px-2 py-3 flex justify-center sticky bottom-0">
+                  {renderPaginationNav()}
+                </div>
             </div>
           </>
         )}

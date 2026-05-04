@@ -64,28 +64,45 @@ const MyProfile = () => {
         reader.readAsDataURL(file);
       });
 
-      // Upload to Google Drive
-      const uploadResponse = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            action: "uploadFile",
-            fileName: `profile_${profileData.joiningNo}_${Date.now()}.jpg`,
-            mimeType: file.type,
-            base64Data: base64Data,
-            folderId: import.meta.env.VITE_GOOGLE_DRIVE_PROFILE_FOLDER_ID // Correct folder ID for profile pictures
-          }).toString(),
-        }
-      );
+      // Upload to Google Drive (with fallbacks for robustness)
+      const folderIdsToTry = [
+        import.meta.env.VITE_GOOGLE_DRIVE_PROFILE_FOLDER_ID,
+        import.meta.env.VITE_GOOGLE_DRIVE_PHOTO_FOLDER_ID,
+        import.meta.env.VITE_GOOGLE_DRIVE_ENQUIRY_FOLDER_ID
+      ].filter(Boolean);
 
-      const uploadResult = await uploadResponse.json();
+      let uploadResult = { success: false };
+      let lastUploadError = null;
+
+      for (const folderId of folderIdsToTry) {
+        try {
+          const uploadResponse = await fetch(
+            import.meta.env.VITE_APPS_SCRIPT_URL,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body: new URLSearchParams({
+                action: "uploadFile",
+                fileName: `profile_${profileData.joiningNo}_${Date.now()}.jpg`,
+                mimeType: file.type,
+                base64Data: base64Data,
+                folderId: folderId
+              }).toString(),
+            }
+          );
+
+          uploadResult = await uploadResponse.json();
+          if (uploadResult.success) break;
+          lastUploadError = uploadResult.error;
+        } catch (err) {
+          lastUploadError = err.message;
+        }
+      }
 
       if (!uploadResult.success) {
-        throw new Error(uploadResult.error || "Failed to upload image");
+        throw new Error(lastUploadError || "Failed to upload image to all available folders");
       }
 
       const imageUrl = uploadResult.fileUrl;
@@ -129,39 +146,76 @@ const MyProfile = () => {
         headers = allData[0].map(h => h?.toString().trim());
       }
 
-      // Find relevant column indices
-      const employeeIdIndex = headers.findIndex(h =>
+      // 2. Find the row in ENQUIRY sheet and update Column Q (Index 16, Column 17)
+      const enquiryResponse = await fetch(
+        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`
+      );
+
+      if (!enquiryResponse.ok) {
+        throw new Error(`HTTP error! status: ${enquiryResponse.status}`);
+      }
+
+      const enquiryResult = await enquiryResponse.json();
+      const enquiryData = enquiryResult.data || enquiryResult;
+
+      // Find header row in ENQUIRY
+      let enquiryHeaderRowIndex = -1;
+      let enquiryHeaders = [];
+
+      for (let i = 0; i < enquiryData.length; i++) {
+        const row = enquiryData[i];
+        if (row && Array.isArray(row)) {
+          const idIndex = row.findIndex(cell => {
+            if (!cell) return false;
+            const text = cell.toString().trim().toLowerCase();
+            return text.includes('ska-joining id') || text.includes('joining id') || text.includes("candidate's photo") || text.includes("candidate photo");
+          });
+
+          if (idIndex !== -1) {
+            enquiryHeaderRowIndex = i;
+            enquiryHeaders = row.map(h => h?.toString().trim());
+            break;
+          }
+        }
+      }
+
+      if (enquiryHeaderRowIndex === -1) {
+        enquiryHeaderRowIndex = 5; // Fallback to row 6 (index 5)
+        enquiryHeaders = enquiryData[5]?.map(h => h?.toString().trim()) || [];
+      }
+
+      const employeeIdIndex = enquiryHeaders.findIndex(h =>
         h && (h.toLowerCase().includes('ska-joining id') || h.toLowerCase().includes('joining id'))
       );
 
-      const nameIndex = headers.findIndex(h =>
+      const nameIndex = enquiryHeaders.findIndex(h =>
         h && (h.toLowerCase().includes('name as per aadhar') || h.toLowerCase().includes('candidate name') || h.toLowerCase() === 'name')
       );
 
-      // Find the employee row index
-      const rowIndex = allData.findIndex((row, idx) => {
-        if (idx <= headerRowIndex) return false;
+      // Find the row index in ENQUIRY
+      const enquiryRowIndex = enquiryData.findIndex((row, idx) => {
+        if (idx <= enquiryHeaderRowIndex) return false;
 
-        // Match by Name first
-        if (nameIndex !== -1 && profileData.candidateName) {
-          const rowName = row[nameIndex]?.toString().trim().toLowerCase();
-          const targetName = profileData.candidateName.toString().trim().toLowerCase();
-          if (rowName === targetName) return true;
-        }
-
-        // Match by Employee ID as fallback
+        // Match by Employee ID first (most reliable)
         if (employeeIdIndex !== -1 && profileData.joiningNo) {
           const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
           const targetId = profileData.joiningNo.toString().trim().toLowerCase();
           if (rowId && rowId === targetId) return true;
         }
 
+        // Match by Name as fallback
+        if (nameIndex !== -1 && profileData.candidateName) {
+          const rowName = row[nameIndex]?.toString().trim().toLowerCase();
+          const targetName = profileData.candidateName.toString().trim().toLowerCase();
+          if (rowName === targetName) return true;
+        }
+
         return false;
       });
 
-      if (rowIndex === -1) throw new Error(`Employee ${profileData.candidateName} not found`);
+      if (enquiryRowIndex === -1) throw new Error(`Employee record not found in ENQUIRY sheet`);
 
-      // Update the JOINING sheet with the new image URL
+      // Update the ENQUIRY sheet with the new image URL in Column Q (Column 17)
       const updateResponse = await fetch(
         import.meta.env.VITE_APPS_SCRIPT_URL,
         {
@@ -171,16 +225,21 @@ const MyProfile = () => {
           },
           body: new URLSearchParams({
             action: "updateCell",
-            sheetName: "JOINING",
-            rowIndex: rowIndex + 1, // Convert to 1-based index
-            columnIndex: 8, // Column H (1-based index)
+            sheetName: "ENQUIRY",
+            rowIndex: enquiryRowIndex + 1, // Convert to 1-based index
+            columnIndex: 17, // Column Q (1-based index)
             value: imageUrl
           }).toString(),
         }
       );
 
-      const updateResult = await updateResponse.json();
-
+      const updateResultText = await updateResponse.text();
+      let updateResult;
+      try {
+        updateResult = JSON.parse(updateResultText);
+      } catch (e) {
+        updateResult = { success: updateResultText.toLowerCase().includes('success') || updateResultText === '' };
+      }
 
       if (updateResult.success) {
         // Update local state
@@ -188,7 +247,7 @@ const MyProfile = () => {
         setFormData(prev => ({ ...prev, candidatePhoto: imageUrl }));
         toast.success('Profile picture updated successfully!');
       } else {
-        throw new Error(updateResult.error || "Failed to update profile in sheet");
+        throw new Error(updateResult.error || "Failed to update profile in ENQUIRY sheet");
       }
 
     } catch (error) {
@@ -203,42 +262,6 @@ const MyProfile = () => {
     }
   };
 
-
-  const getDisplayableImageUrl = (url) => {
-    if (!url) return null;
-
-    try {
-      const directMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-      if (directMatch && directMatch[1]) {
-        return `https://drive.google.com/thumbnail?id=${directMatch[1]}&sz=w400`;
-      }
-
-      const ucMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-      if (ucMatch && ucMatch[1]) {
-        return `https://drive.google.com/thumbnail?id=${ucMatch[1]}&sz=w400`;
-      }
-
-      const openMatch = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
-      if (openMatch && openMatch[1]) {
-        return `https://drive.google.com/thumbnail?id=${openMatch[1]}&sz=w400`;
-      }
-
-      if (url.includes("thumbnail?id=")) {
-        return url;
-      }
-
-      const anyIdMatch = url.match(/([a-zA-Z0-9_-]{25,})/);
-      if (anyIdMatch && anyIdMatch[1]) {
-        return `https://drive.google.com/thumbnail?id=${anyIdMatch[1]}&sz=w400`;
-      }
-
-      const cacheBuster = Date.now();
-      return url.includes("?") ? `${url}&cb=${cacheBuster}` : `${url}?cb=${cacheBuster}`;
-    } catch (e) {
-      console.error("Error processing image URL:", url, e);
-      return url; // Return original URL as fallback
-    }
-  };
 
   const fetchLeaveData = async () => {
     try {
@@ -553,7 +576,7 @@ const MyProfile = () => {
                 const row = enquiryData[i];
                 if (row && Array.isArray(row)) {
                   const candidatePhotoIndex = row.findIndex(cell =>
-                    cell && cell.toString().trim().toLowerCase().includes("candidate's photo")
+                    cell && (cell.toString().trim().toLowerCase().includes("candidate's photo") || cell.toString().trim().toLowerCase().includes("candidate photo"))
                   );
 
                   if (candidatePhotoIndex !== -1) {
@@ -565,22 +588,39 @@ const MyProfile = () => {
               }
 
               if (enquiryHeaderRowIndex !== -1) {
-                const photoIndex = enquiryHeaders.findIndex(h =>
-                  h && h.toLowerCase().includes("candidate's photo")
-                );
+                const photoIndex = 16; // Column Q is Index 16
 
-                // Find the row with matching employee ID
+                // Find indices for ID and Name in ENQUIRY
                 const employeeIdIndex = enquiryHeaders.findIndex(h =>
-                  h && h.toLowerCase().includes('ska-joining id')
+                  h && (h.toLowerCase().includes('ska-joining id') || h.toLowerCase().includes('joining id'))
+                );
+                const enquiryNameIndex = enquiryHeaders.findIndex(h =>
+                  h && (h.toLowerCase().includes('name as per aadhar') || h.toLowerCase().includes('candidate name') || h.toLowerCase() === 'name')
                 );
 
-                if (employeeIdIndex !== -1 && photoIndex !== -1) {
-                  for (let i = enquiryHeaderRowIndex + 1; i < enquiryData.length; i++) {
-                    const row = enquiryData[i];
-                    if (row[employeeIdIndex] === profile.joiningNo && row[photoIndex]) {
-                      profile.candidatePhoto = row[photoIndex];
-                      break;
-                    }
+                for (let i = enquiryHeaderRowIndex + 1; i < enquiryData.length; i++) {
+                  const row = enquiryData[i];
+                  if (!row) continue;
+
+                  let isMatch = false;
+
+                  // Match by Joining ID
+                  if (employeeIdIndex !== -1 && profile.joiningNo) {
+                    const rowId = row[employeeIdIndex]?.toString().trim().toLowerCase();
+                    const targetId = profile.joiningNo.toString().trim().toLowerCase();
+                    if (rowId && targetId && rowId === targetId) isMatch = true;
+                  }
+
+                  // Fallback: Match by Name if ID doesn't match or column missing
+                  if (!isMatch && enquiryNameIndex !== -1 && profile.candidateName) {
+                    const rowName = row[enquiryNameIndex]?.toString().trim().toLowerCase();
+                    const targetName = profile.candidateName.toString().trim().toLowerCase();
+                    if (rowName && targetName && rowName === targetName) isMatch = true;
+                  }
+
+                  if (isMatch && row[photoIndex]) {
+                    profile.candidatePhoto = row[photoIndex];
+                    break;
                   }
                 }
               }
@@ -633,6 +673,10 @@ const MyProfile = () => {
       }
 
       const fullDataResult = await fullDataResponse.json();
+      if (!fullDataResult.success && !Array.isArray(fullDataResult)) {
+        throw new Error(fullDataResult.error || "Failed to fetch current data");
+      }
+
       const allData = fullDataResult.data || fullDataResult;
 
       // 2. Find header row by looking for joining ID or Name
@@ -645,7 +689,7 @@ const MyProfile = () => {
           const idIndex = row.findIndex(cell => {
             if (!cell) return false;
             const text = cell.toString().trim().toLowerCase();
-            return text.includes('ska-joining id') || text.includes('joining id') || text === 'name as per aadhar' || text.includes('candidate name');
+            return text.includes('ska-joining id') || text.includes('joining id') || text === 'id' || text === 'name as per aadhar' || text.includes('candidate name');
           });
 
           if (idIndex !== -1) {
@@ -742,10 +786,17 @@ const MyProfile = () => {
         }
       );
 
-      const result = await response.json();
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        result = { success: responseText.toLowerCase().includes('success') || responseText === '' };
+      }
+
       console.log("Update result:", result);
 
-      if (result.success) {
+      if (result.success || responseText.toLowerCase().includes('success')) {
         // Update local state only after successful API update
         setProfileData(formData);
         toast.success('Profile updated successfully!');
@@ -778,6 +829,9 @@ const MyProfile = () => {
   if (!profileData) {
     return <div className="page-content p-6">No profile data available</div>;
   }
+
+  // Debug log to verify photo source
+  console.log("Profile Photo URL:", profileData.candidatePhoto);
 
   return (
     <div className="space-y-6 page-content p-6">
@@ -825,27 +879,39 @@ const MyProfile = () => {
             >
               {profileData.candidatePhoto ? (
                 <img
-                  src={getDisplayableImageUrl(profileData.candidatePhoto)}
+                  src={profileData.candidatePhoto}
                   alt="Profile"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover profile-image-tag"
                   onError={(e) => {
-                    console.log("Image failed to load:", e.target.src);
-                    if (e.target.src !== profileData.candidatePhoto) {
-                      console.log("Trying original URL:", profileData.candidatePhoto);
-                      e.target.src = profileData.candidatePhoto;
-                    } else {
-                      console.log("Both thumbnail and original URL failed");
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
+                    const originalUrl = profileData.candidatePhoto;
+                    // If standard Drive link fails, try converting to direct format as fallback
+                    if (originalUrl && originalUrl.includes('drive.google.com') && !e.target.src.includes('lh3.googleusercontent.com')) {
+                      const idMatch = originalUrl.match(/[-\w]{25,}/);
+                      if (idMatch) {
+                        console.log("Drive preview failed, trying direct stream format...");
+                        e.target.src = `https://lh3.googleusercontent.com/d/${idMatch[0]}`;
+                        return;
+                      }
                     }
+                    
+                    console.warn("Image could not be loaded even with fallback.");
+                    e.target.style.display = "none";
+                    const defaultAvatar = e.target.parentElement.querySelector('.default-avatar-container');
+                    if (defaultAvatar) defaultAvatar.classList.remove('hidden');
+                    if (defaultAvatar) defaultAvatar.classList.add('flex');
                   }}
                   onLoad={(e) => {
-                    console.log("Image loaded successfully:", e.target.src);
+                    e.target.style.display = "block";
+                    const defaultAvatar = e.target.parentElement.querySelector('.default-avatar-container');
+                    if (defaultAvatar) {
+                      defaultAvatar.classList.remove('flex');
+                      defaultAvatar.classList.add('hidden');
+                    }
                   }}
                 />
               ) : null}
               <div
-                className={`w-full h-full flex items-center justify-center ${profileData.candidatePhoto ? "hidden" : "flex"
+                className={`default-avatar-container w-full h-full items-center justify-center ${profileData.candidatePhoto ? "hidden" : "flex"
                   }`}
               >
                 <User size={48} className="text-indigo-400" />

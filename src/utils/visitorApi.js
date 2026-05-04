@@ -7,11 +7,11 @@ export const fetchVisitsForApprovalApi = async () => {
   try {
     const response = await fetch(`${SCRIPT_URL}?action=fetch&sheet=Request Visit`);
     const result = await response.json();
-    
+
     if (result.success && Array.isArray(result.data) && result.data.length > 5) {
       const headers = result.data[5];
       const dataRows = result.data.slice(6);
-      
+
       const mappedVisits = dataRows.map((row, index) => {
         let obj = { rowIndex: index + 7 }; // Store row index for updates (6 header rows + 1 for 1-based index = +7)
         headers.forEach((header, i) => {
@@ -20,7 +20,7 @@ export const fetchVisitsForApprovalApi = async () => {
           obj[key] = row[i];
 
           const headerLower = headerName.toLowerCase();
-          
+
           // Map exactly to the sheet headers shown in the screenshot
           if (headerLower === 'visitor name') obj.visitorName = row[i];
           if (headerLower === 'mobile number') obj.mobileNumber = row[i];
@@ -30,7 +30,7 @@ export const fetchVisitsForApprovalApi = async () => {
           if (headerLower === 'time of entry') obj.timeOfEntry = row[i];
           if (headerLower === 'visitor photo') obj.photo = row[i];
           if (headerLower === 'status') obj.status = row[i];
-          
+
           // Explicitly map Column F (index 5) to photo
           if (i === 5) obj.photo = row[i];
 
@@ -42,7 +42,7 @@ export const fetchVisitsForApprovalApi = async () => {
               obj.dateOfVisit = row[i];
             }
           }
-          
+
           // Map Column K, L, N (Status) and S (User Code) explicitly
           obj.colK = row[10] || '';
           obj.colL = row[11] || '';
@@ -51,7 +51,7 @@ export const fetchVisitsForApprovalApi = async () => {
         });
         return obj;
       });
-      
+
       return { success: true, visits: mappedVisits };
     }
     return { success: false, visits: [] };
@@ -88,11 +88,11 @@ export const createVisitRequestApi = async (data) => {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: uploadFormData
       });
-      
+
       const uploadResult = await uploadResponse.json();
       if (uploadResult.success && uploadResult.fileUrl) {
         const fileId = uploadResult.fileUrl.split('id=')[1];
-        photoUrl = fileId 
+        photoUrl = fileId
           ? `https://drive.google.com/file/d/${fileId}/view?usp=sharing`
           : uploadResult.fileUrl;
       } else {
@@ -109,7 +109,7 @@ export const createVisitRequestApi = async (data) => {
           reader.readAsDataURL(data.photoFile);
         });
         photoUrl = base64Photo;
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -153,7 +153,7 @@ export const updateVisitStatusApi = async (rowIndex, status) => {
   timeFormData.append('action', 'updateCell');
   timeFormData.append('sheetName', 'Request Visit');
   timeFormData.append('rowIndex', rowIndex);
-  
+
   // Submit approval/rejection timestamp to Column L (12)
   timeFormData.append('columnIndex', '12');
   timeFormData.append('value', currentTimestamp);
@@ -176,7 +176,7 @@ export const updateVisitStatusApi = async (rowIndex, status) => {
         body: timeFormData
       })
     ]);
-    
+
     return await statusResponse.json();
   } catch (error) {
     console.error("Error updating visit status:", error);
@@ -191,13 +191,13 @@ export const fetchVisitorByMobileApi = async (mobile) => {
   try {
     const response = await fetch(`${SCRIPT_URL}?action=fetch&sheet=Request Visit`);
     const result = await response.json();
-    
+
     if (result.success && Array.isArray(result.data) && result.data.length > 5) {
       const headers = result.data[5];
       const mobileIndex = headers.findIndex(h => h.toString().toLowerCase().includes('mobile'));
-      
+
       const foundRow = result.data.slice(6).reverse().find(row => row[mobileIndex] === mobile);
-      
+
       if (foundRow) {
         const visitorData = {};
         headers.forEach((header, i) => {
@@ -209,7 +209,7 @@ export const fetchVisitorByMobileApi = async (mobile) => {
           if (headerLower === 'purpose of visit') visitorData.purposeOfVisit = foundRow[i];
           if (headerLower === 'person to meet') visitorData.personToMeet = foundRow[i];
         });
-        
+
         return { success: true, found: true, data: visitorData };
       }
     }

@@ -245,6 +245,13 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
     }
   };
 
+  useEffect(() => {
+    // Dispatch custom event to notify Header about visitor data for QR generation
+    window.dispatchEvent(new CustomEvent('visitor-form-update', { 
+      detail: formData 
+    }));
+  }, [formData]);
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!formData.visitorName || !formData.mobileNumber || !formData.personToMeet) {

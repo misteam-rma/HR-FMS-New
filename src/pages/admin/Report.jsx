@@ -66,7 +66,7 @@ const Report = () => {
                 { label: "Late", value: 8, icon: Clock, color: "amber" },
                 { label: "Absent", value: 15, icon: UserX, color: "rose" }
               ].map((stat) => (
-                <div key={stat.label} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                <div key={stat.label} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-2 mb-1">
                     <stat.icon size={14} className={`text-${stat.color}-600`} />
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</span>
@@ -76,62 +76,86 @@ const Report = () => {
               ))}
             </div>
             
-            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Check-In</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Check-Out</th>
-                    <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {[
-                    { id: 'EMP001', name: 'John Doe', in: '09:05 AM', out: '06:15 PM', status: 'Present' },
-                    { id: 'EMP002', name: 'Jane Smith', in: '09:25 AM', out: '06:05 PM', status: 'Late' },
-                    { id: 'EMP003', name: 'Robert Johnson', in: '-', out: '-', status: 'Absent' }
-                  ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-2 whitespace-nowrap">
-                        <p className="text-xs font-bold text-gray-800">{row.name}</p>
-                        <p className="text-[9px] text-gray-400 font-bold uppercase">{row.id}</p>
-                      </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.in}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.out}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-center">
-                        <StatusBadge status={row.status} />
-                      </td>
+            <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Check-In</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Check-Out</th>
+                      <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { id: 'EMP001', name: 'John Doe', in: '09:05 AM', out: '06:15 PM', status: 'Present' },
+                      { id: 'EMP002', name: 'Jane Smith', in: '09:25 AM', out: '06:05 PM', status: 'Late' },
+                      { id: 'EMP003', name: 'Robert Johnson', in: '-', out: '-', status: 'Absent' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          <p className="text-xs font-bold text-gray-800">{row.name}</p>
+                          <p className="text-[9px] text-gray-400 font-bold uppercase">{row.id}</p>
+                        </td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.in}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.out}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-center">
+                          <StatusBadge status={row.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-gray-100 bg-slate-50/50">
+                {[
+                  { id: 'EMP001', name: 'John Doe', in: '09:05 AM', out: '06:15 PM', status: 'Present' },
+                  { id: 'EMP002', name: 'Jane Smith', in: '09:25 AM', out: '06:05 PM', status: 'Late' },
+                  { id: 'EMP003', name: 'Robert Johnson', in: '-', out: '-', status: 'Absent' }
+                ].map((row, idx) => (
+                  <div key={idx} className="p-4 flex items-center justify-between bg-white active:bg-slate-50 transition-colors">
+                    <div className="space-y-1">
+                      <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase">
+                        <span>In: {row.in}</span>
+                        <span className="text-slate-200">|</span>
+                        <span>Out: {row.out}</span>
+                      </div>
+                    </div>
+                    <StatusBadge status={row.status} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         );
       case 'attendanceAnalysis':
         return (
           <div className="space-y-4">
-            <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Attendance Trends</h4>
                   <p className="text-[10px] text-gray-400 font-bold uppercase">Weekly activity overview</p>
                 </div>
                 <div className="flex gap-1">
-                  <button className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">THIS WEEK</button>
-                  <button className="text-[10px] font-bold px-2 py-1 text-gray-400 hover:bg-gray-50 rounded">THIS MONTH</button>
+                  <button className="text-[10px] font-bold px-2 py-1 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">THIS WEEK</button>
+                  <button className="text-[10px] font-bold px-2 py-1 text-gray-400 hover:bg-gray-50 rounded-lg">THIS MONTH</button>
                 </div>
               </div>
-              <div className="h-48 bg-gray-50 border border-dashed border-gray-200 rounded-lg flex items-center justify-center group overflow-hidden relative">
+              <div className="h-48 bg-gray-50 border border-dashed border-gray-200 rounded-2xl flex items-center justify-center group overflow-hidden relative">
                 <BarChart3 size={32} className="text-gray-300 group-hover:scale-110 transition-transform" />
                 <span className="ml-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Interactive Visualization Container</span>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-50 pb-2">Departmental Leaderboard</h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {[
                     { name: 'Engineering', val: '96%' },
                     { name: 'Sales', val: '92%' },
@@ -139,14 +163,14 @@ const Report = () => {
                   ].map((dept) => (
                     <div key={dept.name} className="flex justify-between items-center group">
                       <span className="text-xs font-bold text-gray-700">{dept.name}</span>
-                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">{dept.val}</span>
+                      <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">{dept.val}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
                 <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-50 pb-2">Policy Violations (Late)</h4>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {[
                     { name: 'Michael Brown', val: '8X' },
                     { name: 'Sarah Wilson', val: '6X' },
@@ -154,7 +178,7 @@ const Report = () => {
                   ].map((emp) => (
                     <div key={emp.name} className="flex justify-between items-center">
                       <span className="text-xs font-bold text-gray-700">{emp.name}</span>
-                      <span className="text-xs font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">{emp.val}</span>
+                      <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">{emp.val}</span>
                     </div>
                   ))}
                 </div>
@@ -164,71 +188,124 @@ const Report = () => {
         );
       case 'monthlyAttendance':
         return (
-          <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-            <table className="min-w-full divide-y divide-gray-100">
-              <thead className="bg-gray-50/50">
-                <tr>
-                  <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                  <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</th>
-                  <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Present</th>
-                  <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Absent</th>
-                  <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leaves</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <table className="min-w-full divide-y divide-gray-100">
+                <thead className="bg-gray-50/50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</th>
+                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Present</th>
+                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Absent</th>
+                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Leaves</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {[
+                    { name: 'John Doe', tot: 22, p: 20, a: 1, l: 1 },
+                    { name: 'Jane Smith', tot: 22, p: 19, a: 0, l: 3 }
+                  ].map((row, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.tot}D</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-emerald-600">{row.p}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-rose-600">{row.a}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-amber-600">{row.l}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-gray-100">
                 {[
                   { name: 'John Doe', tot: 22, p: 20, a: 1, l: 1 },
                   { name: 'Jane Smith', tot: 22, p: 19, a: 0, l: 3 }
                 ].map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-[11px] font-medium text-gray-600">{row.tot}D</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-emerald-600">{row.p}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-rose-600">{row.a}</td>
-                    <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-amber-600">{row.l}</td>
-                  </tr>
+                  <div key={idx} className="p-4 space-y-3 bg-white active:bg-slate-50 transition-colors">
+                    <div className="flex justify-between items-center">
+                       <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{row.tot} Total Days</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                       <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                          <p className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter">Present</p>
+                          <p className="text-xs font-black text-emerald-700">{row.p}</p>
+                       </div>
+                       <div className="p-2 bg-rose-50 rounded-xl border border-rose-100">
+                          <p className="text-[8px] font-bold text-rose-600 uppercase tracking-tighter">Absent</p>
+                          <p className="text-xs font-black text-rose-700">{row.a}</p>
+                       </div>
+                       <div className="p-2 bg-amber-50 rounded-xl border border-amber-100">
+                          <p className="text-[8px] font-bold text-amber-600 uppercase tracking-tighter">Leaves</p>
+                          <p className="text-xs font-black text-amber-700">{row.l}</p>
+                       </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+            </div>
           </div>
         );
       case 'whatsappDayEnd':
         return (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Messages Sent</p>
                 <p className="text-xl font-bold text-indigo-700 leading-none mt-1">142</p>
               </div>
-              <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+              <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Acks Recv.</p>
                 <p className="text-xl font-bold text-emerald-600 leading-none mt-1">128 <span className="text-[9px] text-gray-300 font-bold">(90%)</span></p>
               </div>
             </div>
-            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sent Time</th>
-                    <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sent Time</th>
+                      <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { name: 'John Doe', time: '06:15 PM', status: 'Delivered' },
+                      { name: 'Jane Smith', time: '06:15 PM', status: 'Pending' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-600">{row.time}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-center">
+                          <StatusBadge status={row.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-gray-100">
                   {[
                     { name: 'John Doe', time: '06:15 PM', status: 'Delivered' },
                     { name: 'Jane Smith', time: '06:15 PM', status: 'Pending' }
                   ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-600">{row.time}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-center">
-                        <StatusBadge status={row.status} />
-                      </td>
-                    </tr>
+                    <div key={idx} className="p-4 flex items-center justify-between bg-white active:bg-slate-50 transition-colors">
+                      <div className="space-y-1">
+                        <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                           <MessageCircle size={10} className="text-indigo-400" /> {row.time}
+                        </p>
+                      </div>
+                      <StatusBadge status={row.status} />
+                    </div>
                   ))}
-                </tbody>
-              </table>
+              </div>
             </div>
           </div>
         );
@@ -242,85 +319,109 @@ const Report = () => {
                 { label: "Rejected", val: 3, c: "rose" },
                 { label: "Pending", val: 3, c: "amber" }
               ].map(s => (
-                <div key={s.label} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                <div key={s.label} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{s.label}</p>
                   <p className={`text-xl font-bold text-${s.c}-600 leading-none mt-1`}>{s.val}</p>
                 </div>
               ))}
             </div>
-            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
-                    <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Period</th>
+                      <th className="px-4 py-2 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { name: 'John Doe', type: 'Sick', range: '15/09 - 16/09', status: 'Approved' },
+                      { name: 'Jane Smith', type: 'Annual', range: '20/09 - 22/09', status: 'Pending' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[10px] font-bold text-gray-500 uppercase">{row.type}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[10px] font-medium text-gray-400">{row.range}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-center">
+                          <StatusBadge status={row.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-gray-100 bg-slate-50/50">
                   {[
                     { name: 'John Doe', type: 'Sick', range: '15/09 - 16/09', status: 'Approved' },
                     { name: 'Jane Smith', type: 'Annual', range: '20/09 - 22/09', status: 'Pending' }
                   ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[10px] font-bold text-gray-500 uppercase">{row.type}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[10px] font-medium text-gray-400">{row.range}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-center">
+                    <div key={idx} className="p-4 space-y-3 bg-white active:bg-slate-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                          <p className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded shadow-sm inline-block uppercase tracking-wider">{row.type}</p>
+                        </div>
                         <StatusBadge status={row.status} />
-                      </td>
-                    </tr>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                         <Calendar size={12} className="text-slate-300" /> {row.range}
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+              </div>
             </div>
           </div>
         );
       case 'lateCutoff':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Clock className="text-rose-500" size={14} />
+             <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4 px-1">
+                <Clock className="text-rose-500" size={16} />
                 <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">Late Arrivals Today</h4>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {[
                   { name: 'John Doe', id: 'EMP001', time: '09:25 AM', diff: '25m late' },
                   { name: 'Jane Smith', id: 'EMP002', time: '09:35 AM', diff: '35m late' }
                 ].map((row, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2 bg-gray-50/50 rounded border border-gray-100">
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50/80 rounded-xl border border-slate-100 transition-all active:scale-[0.98]">
                     <div>
-                      <p className="text-xs font-bold text-gray-800">{row.name}</p>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase">{row.id}</p>
+                      <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">ID: {row.id}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold text-rose-600">{row.time}</p>
-                      <p className="text-[9px] text-rose-400 font-bold uppercase">{row.diff}</p>
+                      <p className="text-xs font-black text-rose-600 tracking-tight">{row.time}</p>
+                      <p className="text-[9px] text-rose-400 font-bold uppercase tracking-tighter italic">{row.diff}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-3 px-1">
-                <Clock className="text-amber-500" size={14} />
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4 px-1">
+                <Clock className="text-amber-500" size={16} />
                 <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-widest">Early Departures Today</h4>
               </div>
-               <div className="space-y-2">
+               <div className="space-y-3">
                 {[
                   { name: 'Robert Johnson', id: 'EMP003', time: '05:15 PM', diff: '45m early' },
                   { name: 'Sarah Wilson', id: 'EMP004', time: '05:25 PM', diff: '35m early' }
                 ].map((row, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-2 bg-gray-50/50 rounded border border-gray-100">
+                  <div key={idx} className="flex justify-between items-center p-3 bg-slate-50/80 rounded-xl border border-slate-100 transition-all active:scale-[0.98]">
                     <div>
-                      <p className="text-xs font-bold text-gray-800">{row.name}</p>
-                      <p className="text-[9px] text-gray-400 font-bold uppercase">{row.id}</p>
+                      <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">ID: {row.id}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold text-amber-600">{row.time}</p>
-                      <p className="text-[9px] text-amber-400 font-bold uppercase">{row.diff}</p>
+                      <p className="text-xs font-black text-amber-600 tracking-tight">{row.time}</p>
+                      <p className="text-[9px] text-amber-400 font-bold uppercase tracking-tighter italic">{row.diff}</p>
                     </div>
                   </div>
                 ))}
@@ -338,36 +439,59 @@ const Report = () => {
                 { l: "Avg OT", v: "2.3h", c: "amber" },
                 { l: "Peak OT", v: "8.5h", c: "rose" }
               ].map(s => (
-                <div key={s.l} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                <div key={s.l} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{s.l}</p>
                   <p className={`text-xl font-bold text-${s.c}-600 leading-none mt-1`}>{s.v}</p>
                 </div>
               ))}
             </div>
-            <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm">
-              <table className="min-w-full divide-y divide-gray-100">
-                <thead className="bg-gray-50/50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Regular</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">OT Hours</th>
-                    <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                   {[
+            <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <table className="min-w-full divide-y divide-gray-100">
+                  <thead className="bg-gray-50/50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Regular</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">OT Hours</th>
+                      <th className="px-4 py-2 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { name: 'John Doe', reg: '8h', ot: '2.5h', tot: '10.5h' },
+                      { name: 'Jane Smith', reg: '8h', ot: '3h', tot: '11h' }
+                    ].map((row, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-500">{row.reg}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-indigo-600">{row.ot}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-gray-700">{row.tot}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-gray-100">
+                  {[
                     { name: 'John Doe', reg: '8h', ot: '2.5h', tot: '10.5h' },
                     { name: 'Jane Smith', reg: '8h', ot: '3h', tot: '11h' }
                   ].map((row, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-800">{row.name}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] text-gray-500">{row.reg}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-indigo-600">{row.ot}</td>
-                      <td className="px-4 py-2 whitespace-nowrap text-[11px] font-bold text-gray-700">{row.tot}</td>
-                    </tr>
+                    <div key={idx} className="p-4 bg-white active:bg-slate-50 transition-colors space-y-2">
+                       <div className="flex justify-between items-center">
+                          <p className="text-xs font-black text-slate-800 uppercase tracking-tight">{row.name}</p>
+                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100 uppercase tracking-widest">OT: {row.ot}</span>
+                       </div>
+                       <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                          <span className="flex items-center gap-1"><Clock size={10} /> {row.reg} Regular</span>
+                          <span className="text-slate-200">|</span>
+                          <span className="text-slate-700">Total: {row.tot}</span>
+                       </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+              </div>
             </div>
           </div>
         );

@@ -353,65 +353,123 @@ const Reimbursement = () => {
         </div>
       </div>
 
-      {/* Table Area */}
-      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col">
+      {/* Table/Card Area */}
+      <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col shadow-sm">
         {tableLoading ? (
           <div className="flex-1 flex items-center justify-center p-12">
             <LoadingSpinner message="Loading claims..." />
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 border-collapse">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {tableHeaders.map((header, idx) => (
-                      <th key={idx} className="px-4 py-3 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider border-x border-gray-100 whitespace-nowrap">
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {currentItems.length === 0 ? (
+            {/* Desktop View */}
+            <div className="hidden md:block flex-1 flex flex-col">
+              <div className="flex-1 overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 border-collapse">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <td colSpan={tableHeaders.length || 6} className="px-6 py-24 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">No records found</td>
+                      {tableHeaders.map((header, idx) => (
+                        <th key={idx} className="px-4 py-3 text-center text-[10px] font-bold text-gray-500 uppercase tracking-wider border-x border-gray-100 whitespace-nowrap">
+                          {header}
+                        </th>
+                      ))}
                     </tr>
-                  ) : (
-                    currentItems.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                        {tableHeaders.map((header, idx) => {
-                          const val = item[header];
-                          const isStatus = header.toLowerCase().includes('status');
-                          const isAmount = header.toLowerCase().includes('price') || header.toLowerCase().includes('amount');
-
-                          return (
-                            <td key={idx} className="px-4 py-3 whitespace-nowrap text-center text-[12px] text-gray-600 border-x border-gray-50">
-                              {isStatus ? (
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${val === 'Approved' ? 'bg-green-100 text-green-700' : (val === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}`}>
-                                  {val || 'Pending'}
-                                </span>
-                              ) : isAmount ? (
-                                <span className="font-bold text-indigo-600">₹{parseFloat(val || 0).toLocaleString()}</span>
-                              ) : (
-                                val || '-'
-                              )}
-                            </td>
-                          );
-                        })}
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-100">
+                    {currentItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={tableHeaders.length || 6} className="px-6 py-24 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">No records found</td>
                       </tr>
+                    ) : (
+                      currentItems.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                          {tableHeaders.map((header, idx) => {
+                            const val = item[header];
+                            const isStatus = header.toLowerCase().includes('status');
+                            const isAmount = header.toLowerCase().includes('price') || header.toLowerCase().includes('amount');
+
+                            return (
+                              <td key={idx} className="px-4 py-3 whitespace-nowrap text-center text-[12px] text-gray-600 border-x border-gray-50">
+                                {isStatus ? (
+                                  <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${val === 'Approved' ? 'bg-green-100 text-green-700' : (val === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}`}>
+                                    {val || 'Pending'}
+                                  </span>
+                                ) : isAmount ? (
+                                  <span className="font-bold text-indigo-600">₹{parseFloat(val || 0).toLocaleString()}</span>
+                                ) : (
+                                  val || '-'
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {/* Desktop Pagination */}
+              <div className="px-4 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
+                <p className="text-[13px] text-gray-600 font-medium tracking-wide">Showing <span className="font-bold text-gray-900">{currentItems.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, claims.length)}</span> of <span className="font-bold text-gray-900">{claims.length}</span></p>
+                <div className="flex gap-2">
+                  <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"><ChevronRight size={16} className="rotate-180" /></button>
+                  <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"><ChevronRight size={16} /></button>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden flex flex-col h-[calc(105vh-320px)] bg-slate-50">
+                <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                  {currentItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-center">
+                      <p className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">No claims recorded</p>
+                    </div>
+                  ) : (
+                    currentItems.map((item, idx) => (
+                      <div key={item.id || idx} className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 space-y-3 active:bg-slate-50 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item['Name'] || item['Employee Name'] || 'Reimbursement'}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{item['Employee Code'] || item['ID'] || '000'}</p>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                            item['Status'] === 'Approved' ? 'bg-emerald-50 text-emerald-600' : 
+                            (item['Status'] === 'Pending' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600')
+                          }`}>
+                            {item['Status'] || 'Pending'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+                          <div className="space-y-0.5">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Bill Month</p>
+                             <p className="text-[11px] font-bold text-slate-700 uppercase">{item['Bill Month'] || '—'}</p>
+                          </div>
+                          <div className="space-y-0.5 text-right">
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Amount</p>
+                             <p className="text-[11px] font-bold text-indigo-600">₹{parseFloat(item['Total Amount'] || item['Price'] || 0).toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <div className="flex items-center gap-1.5">
+                             <span className="text-[10px] font-bold text-slate-400 uppercase">{item['Vehicle Type'] || 'General'}</span>
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500 italic truncate max-w-[150px]">
+                            {item['Place Name'] || item['Visits'] || ''}
+                          </div>
+                        </div>
+                      </div>
                     ))
                   )}
-                </tbody>
-              </table>
-            </div>
-            {/* Pagination placeholder */}
-            <div className="px-4 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
-              <p className="text-[13px] text-gray-600 font-medium">Page {currentPage} of {Math.max(1, totalPages)}</p>
-              <div className="flex gap-2">
-                <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} className="p-1 border rounded hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={16} className="rotate-180" /></button>
-                <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} className="p-1 border rounded hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={16} /></button>
-              </div>
+                </div>
+                <div className="border-t border-gray-200 bg-white px-2 py-3 flex justify-center sticky bottom-0">
+                  <div className="flex gap-4 items-center">
+                    <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="p-2 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={18} className="rotate-180" /></button>
+                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Page {currentPage} of {totalPages}</span>
+                    <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="p-2 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50"><ChevronRight size={18} /></button>
+                  </div>
+                </div>
             </div>
           </>
         )}

@@ -172,21 +172,38 @@ const AttendanceForm = () => {
     const loadingToast = toast.loading("Verifying identity & logging punch...");
 
     try {
-      // 1. Upload Photo
-      const base64Data = photo.split('base64,')[1];
-      const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          action: "uploadFile",
-          fileName: `Attendance_${formData.name || 'User'}_${Date.now()}.jpg`,
-          mimeType: "image/jpeg",
-          base64Data: base64Data,
-          folderId: import.meta.env.VITE_GOOGLE_DRIVE_PROFILE_FOLDER_ID
-        }).toString(),
-      });
-      const uploadResult = await uploadRes.json();
-      if (!uploadResult.success) throw new Error("Photo upload failed");
+      // 1. Upload Photo (with fallbacks for robustness)
+      const folderIdsToTry = [
+        import.meta.env.VITE_GOOGLE_DRIVE_PROFILE_FOLDER_ID,
+        import.meta.env.VITE_GOOGLE_DRIVE_PHOTO_FOLDER_ID,
+        import.meta.env.VITE_GOOGLE_DRIVE_ENQUIRY_FOLDER_ID
+      ].filter(Boolean);
+
+      let uploadResult = { success: false };
+      let lastUploadError = null;
+
+      for (const folderId of folderIdsToTry) {
+        try {
+          const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+              action: "uploadFile",
+              fileName: `Attendance_${formData.name || 'User'}_${Date.now()}.jpg`,
+              mimeType: "image/jpeg",
+              base64Data: base64Data,
+              folderId: folderId
+            }).toString(),
+          });
+          uploadResult = await uploadRes.json();
+          if (uploadResult.success) break;
+          lastUploadError = uploadResult.error;
+        } catch (err) {
+          lastUploadError = err.message;
+        }
+      }
+
+      if (!uploadResult.success) throw new Error(lastUploadError || "Photo upload failed across all folders");
       const photoUrl = uploadResult.fileUrl;
 
       // 2. Prepare Data
