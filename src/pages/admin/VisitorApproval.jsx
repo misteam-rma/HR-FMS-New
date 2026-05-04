@@ -17,10 +17,13 @@ import {
     X,
     FileText,
     Image as ImageIcon,
-    UserCheck
+    UserCheck,
+    QrCode
 } from 'lucide-react';
 import { fetchVisitsForApprovalApi, updateVisitStatusApi } from '../../utils/visitorApi';
 import VisitorEntry from './VisitorEntry';
+import QRCodeModal from '../../components/QRCodeModal';
+
 import { getStoredUser, isAdminUser } from '../../utils/auth';
 
 const VisitorApproval = () => {
@@ -34,6 +37,8 @@ const VisitorApproval = () => {
     const [updatingStatus, setUpdatingStatus] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const [previewImage, setPreviewImage] = useState(null);
+    const [showQrModal, setShowQrModal] = useState(false);
+
 
     const getDriveDirectLink = (url) => {
         if (!url || !url.includes('drive.google.com')) return url;
@@ -150,13 +155,23 @@ const VisitorApproval = () => {
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setShowFormModal(true)}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
-                >
-                    <Plus size={18} />
-                    Request Form
-                </button>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setShowQrModal(true)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 shadow-lg shadow-slate-100 transition-all active:scale-95"
+                    >
+                        <QrCode size={18} />
+                        QR Code
+                    </button>
+                    <button
+                        onClick={() => setShowFormModal(true)}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                    >
+                        <Plus size={18} />
+                        Request Form
+                    </button>
+                </div>
+
             </div>
 
             {/* Content Table Section */}
@@ -465,6 +480,9 @@ const VisitorApproval = () => {
                     </div>
                 </div>
             )}
+
+            {/* QR Code Modal */}
+            <QRCodeModal isOpen={showQrModal} onClose={() => setShowQrModal(false)} />
 
             {/* Premium Toast Notifications */}
             {toast.show && (

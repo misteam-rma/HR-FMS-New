@@ -32,6 +32,8 @@ import GatePass from './pages/GatePass';
 import GatePassRequest from './pages/GatePassRequest';
 import VisitorApproval from './pages/admin/VisitorApproval';
 import CloseGatePass from './pages/admin/CloseGatePass';
+import VisitorEntry from './pages/admin/VisitorEntry';
+
 
 function App() {
   return (
@@ -40,6 +42,8 @@ function App() {
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/visitor-form" element={<div className="p-6 bg-slate-50 min-h-screen flex items-center justify-center"><VisitorEntry /></div>} />
+
           
           <Route path="/" element={
             <ProtectedRoute>
