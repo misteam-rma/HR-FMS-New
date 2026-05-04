@@ -42,7 +42,8 @@ function App() {
         <Toaster position="top-right" />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/visitor-form" element={<div className="p-6 bg-slate-50 min-h-screen flex items-center justify-center"><VisitorEntry /></div>} />
+          <Route path="/visitor-form" element={<div className="p-6 bg-slate-50 min-h-screen flex items-center justify-center"><VisitorEntry isPublic={true} /></div>} />
+
 
           
           <Route path="/" element={

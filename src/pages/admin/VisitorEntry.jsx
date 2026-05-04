@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 import { createVisitRequestApi, fetchVisitorByMobileApi, fetchVisitsForApprovalApi } from "../../utils/visitorApi";
 
-const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
+const VisitorEntry = ({ isModal = false, onClose, onRefresh, isPublic = false }) => {
+
   const navigate = useNavigate();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,7 +60,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
     // Pre-fill user name if logged in as user
     const userStr = localStorage.getItem('user');
     let prefillName = "";
-    if (userStr) {
+    if (userStr && !isPublic) {
       try {
         const userData = JSON.parse(userStr);
         const isAdmin = userData.Admin?.toLowerCase() === 'yes' || userData.Role?.toLowerCase() === 'admin' || userData.role?.toLowerCase() === 'admin';
@@ -71,6 +72,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
         console.error("Error parsing user data:", e);
       }
     }
+
 
     setFormData((prev) => ({
       ...prev,
@@ -284,8 +286,25 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh }) => {
       if (onRefresh) onRefresh();
       setTimeout(() => {
         if (isModal) onClose();
+        else if (isPublic) {
+          // Reset form for next visitor
+          setFormData({
+            visitorName: "",
+            mobileNumber: "",
+            email: "",
+            visitorAddress: "",
+            purposeOfVisit: "",
+            personToMeet: "",
+            dateOfVisit: new Date().toISOString().split("T")[0],
+            timeOfEntry: new Date().toTimeString().slice(0, 5),
+          });
+          setCapturedPhoto(null);
+          setPhotoFile(null);
+          openCamera(currentFacingMode);
+        }
         else navigate("/");
       }, 1500);
+
     } catch (err) {
       showToast("Error saving data", "error");
     } finally {
