@@ -173,23 +173,6 @@ const Header = ({ onMenuClick, user }) => {
               )}
             </div>
 
-            <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-all hidden sm:block">
-              <Settings size={20} />
-            </button>
-
-            <button 
-              onClick={() => setShowQrModal(true)}
-              className="p-1 text-indigo-600 bg-white hover:bg-slate-50 rounded-lg transition-all hidden sm:flex items-center justify-center border border-slate-200 shadow-sm overflow-hidden"
-              title="Generate Visitor Pass QR"
-            >
-              <div className="flex items-center justify-center w-8 h-8 scale-[0.2] origin-center">
-                <QRCodeCanvas 
-                  value={visitorUrl} 
-                  size={100}
-                  level="L"
-                />
-              </div>
-            </button>
 
             <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { 
-  Search, Users, Calendar, Filter, Clock, CheckCircle2, 
-  XCircle, AlertCircle, ChevronRight, FileText, ChevronDown, 
+import {
+  Search, Users, Calendar, Filter, Clock, CheckCircle2,
+  XCircle, AlertCircle, ChevronRight, FileText, ChevronDown,
   Check, History, Download, MapPin, List, LayoutDashboard, Camera, RotateCw, MapPinned,
   Plus, Loader2, Send
 } from "lucide-react";
@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 const AttendanceDaily = () => {
   const [attendanceData, setAttendanceData] = useState([]);
-  const [activeTab, setActiveTab] = useState("pending"); 
+  const [activeTab, setActiveTab] = useState("pending");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
@@ -69,7 +69,7 @@ const AttendanceDaily = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -78,7 +78,7 @@ const AttendanceDaily = () => {
     if (locationData.latitude && locationData.longitude) {
       ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
       ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-      
+
       ctx.font = "bold 14px Outfit, sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
@@ -105,7 +105,7 @@ const AttendanceDaily = () => {
       async (position) => {
         const lat = position.coords.latitude.toString();
         const lng = position.coords.longitude.toString();
-        
+
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
           const data = await res.json();
@@ -132,7 +132,7 @@ const AttendanceDaily = () => {
       const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
-      
+
       if (Array.isArray(rawData) && rawData.length > 0) {
         // Dynamic Header Detection: Find where the data starts
         let headerRowIndex = 0;
@@ -151,7 +151,7 @@ const AttendanceDaily = () => {
           type: row[3]?.toString().trim() || "",
           department: row[10]?.toString().trim() || ""
         })).filter(u => u.code && u.code !== "Code" && u.code !== "Employee Code");
-        
+
         setUserList(processedUsers);
       }
     } catch (err) {
@@ -162,7 +162,7 @@ const AttendanceDaily = () => {
   const handleCodeChange = (e) => {
     const selectedCode = e.target.value;
     const employee = userList.find(u => u.code === selectedCode);
-    
+
     if (employee) {
       setModalFormData({
         ...modalFormData,
@@ -191,11 +191,11 @@ const AttendanceDaily = () => {
       const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
-      
+
       if (Array.isArray(rawData)) {
         // In USER sheet: Code is index 6 (Col G)
         const employee = rawData.slice(6).find(row => row[6]?.toString().trim().toLowerCase() === modalFormData.code.trim().toLowerCase());
-        
+
         if (employee) {
           setModalFormData(prev => ({
             ...prev,
@@ -227,8 +227,8 @@ const AttendanceDaily = () => {
     try {
       // 1. Upload image to Google Drive
       let imageUrl = null;
-      const folderId = modalFormData.punchType === 'in' 
-        ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID 
+      const folderId = modalFormData.punchType === 'in'
+        ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID
         : import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_OUT_FOLDER_ID;
 
       const uploadResponse = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
@@ -242,12 +242,12 @@ const AttendanceDaily = () => {
           folderId: folderId || ""
         })
       });
-      
+
       const uploadResult = await uploadResponse.json();
       if (uploadResult.success && uploadResult.fileUrl) {
         // Extract file ID from the backend's returned URL (https://drive.google.com/uc?export=view&id=...)
         const fileId = uploadResult.fileUrl.split('id=')[1];
-        imageUrl = fileId 
+        imageUrl = fileId
           ? `https://drive.google.com/file/d/${fileId}/view?usp=sharing`
           : uploadResult.fileUrl;
       } else {
@@ -258,14 +258,14 @@ const AttendanceDaily = () => {
       const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
       const fetchResult = await fetchResponse.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
-      
+
       let maxSerial = 0;
       if (Array.isArray(existingData) && existingData.length > 1) {
-          const rows = existingData.slice(1); // Skip header row
-          rows.forEach(row => {
-              const sn = parseInt(row[1]); // Serial no is index 1
-              if (!isNaN(sn) && sn > maxSerial) maxSerial = sn;
-          });
+        const rows = existingData.slice(1); // Skip header row
+        rows.forEach(row => {
+          const sn = parseInt(row[1]); // Serial no is index 1
+          if (!isNaN(sn) && sn > maxSerial) maxSerial = sn;
+        });
       }
       const nextSerial = maxSerial + 1;
 
@@ -322,7 +322,7 @@ const AttendanceDaily = () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+
       const result = await response.json();
       if (!result.success) throw new Error(result.error || 'Failed to fetch daily logs');
 
@@ -338,34 +338,37 @@ const AttendanceDaily = () => {
       }
 
       const headers = rawData[headerRowIndex].map(h => h?.toString().trim() || '');
-      const dataRows = rawData.length > headerRowIndex + 1 ? rawData.slice(headerRowIndex + 1) : [];
+      const dataRows = rawData.slice(headerRowIndex + 1);
 
-      const processedData = dataRows.map((row, idx) => {
-        const obj = { id: idx };
-        headers.forEach((header, colIndex) => {
-          obj[header] = row[colIndex] !== undefined && row[colIndex] !== null ? row[colIndex].toString() : '';
+        const processedData = dataRows.map((row, index) => {
+          // Explicit mapping based on Sheet Screenshot: G=6 (Punch Status), M=12 (Time)
+          const rawStatus = (row[6] || '').toString().trim().toUpperCase();
+          const punchTime = (row[12] || '').toString().trim() || '--:--';
+          
+          const isIn = rawStatus.includes('IN');
+          const isOut = rawStatus.includes('OUT');
+          
+          // Mapping based on Screenshot: C=2 (ID), E=4 (Name), L=11 (Date), F=5 (Dept), K=10 (Location)
+          const empId = (row[2] || '').toString().trim();
+          const empName = (row[4] || '').toString().trim();
+          const date = (row[11] || '').toString().trim();
+          const dept = (row[5] || '').toString().trim();
+          const location = (row[10] || 'Location NA').toString().trim();
+
+          return {
+            id: `idx-${index}`,
+            name: empName || 'Unknown',
+            empId: empId || 'N/A',
+            date: date || 'N/A',
+            inTime: isIn ? punchTime : '--:--',
+            outTime: isOut ? punchTime : '--:--',
+            workingHours: '0', 
+            lateMins: '0',
+            status: isIn ? 'Present' : 'Punch Out',
+            location: location,
+            department: dept
+          };
         });
-        
-        // Correct Mapping based on Sheet Image
-        const punchStatus = (obj['Punch Status'] || '').toUpperCase();
-        const punchTime = obj['Time'] || '--:--';
-
-        return {
-          id: obj.id,
-          empId: obj['Employee Code'] || '-',
-          name: obj['Employee Name'] || '-',
-          department: obj['Department'] || 'General',
-          designation: obj['Employee Type'] || 'Staff',
-          date: obj['Date'] || '-',
-          day: '-', // Day can be derived if needed, or left as placeholder
-          inTime: punchStatus === 'IN' ? punchTime : '--:--',
-          outTime: punchStatus === 'OUT' ? punchTime : '--:--',
-          workingHours: '0', // Calculated later or in separate logic
-          lateMins: '0', 
-          status: punchStatus === 'IN' ? 'Present' : 'Punch Out',
-          location: obj['Location name'] || 'Location NA',
-        };
-      });
 
       setAttendanceData(processedData);
     } catch (err) {
@@ -407,7 +410,7 @@ const AttendanceDaily = () => {
         <ChevronRight className="h-4 w-4 rotate-180" />
       </button>
       {[...Array(Math.max(1, Math.min(5, totalPages)))].map((_, i) => (
-        <button key={i} onClick={() => paginate(i+1)} className={`relative inline-flex items-center px-3 py-1.5 border text-[11px] font-bold ${currentPage === (i+1) ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"}`}>
+        <button key={i} onClick={() => paginate(i + 1)} className={`relative inline-flex items-center px-3 py-1.5 border text-[11px] font-bold ${currentPage === (i + 1) ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"}`}>
           {i + 1}
         </button>
       ))}
@@ -419,7 +422,7 @@ const AttendanceDaily = () => {
 
   return (
     <div className="max-w-full mx-auto px-1 sm:px-2 lg:px-4 py-4 space-y-4 md:space-y-6 pb-20 md:pb-8 font-outfit">
-      
+
       {/* 🧩 Header Section - Call Tracker Parity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tab Switcher - Call Tracker SPEC */}
@@ -432,69 +435,69 @@ const AttendanceDaily = () => {
           {/* Search bar */}
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
-            <input 
-               type="text" 
-               placeholder="Search calls..." 
-               value={searchTerm} 
-               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-               className="pl-9 pr-4 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full text-[13px] shadow-sm bg-white"
+            <input
+              type="text"
+              placeholder="Search calls..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="pl-9 pr-4 py-1.5 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 w-full text-[13px] shadow-sm bg-white"
             />
           </div>
 
           <div className="grid grid-cols-2 lg:flex lg:items-center gap-2">
-             {/* Department Filter */}
-             <div className="relative">
-               <div onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)} className="flex items-center gap-2 h-8 px-3 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium cursor-pointer hover:border-indigo-400 transition shadow-sm">
-                 <Filter size={11} className="text-gray-400" />
-                 <span className="truncate">{filterDepartment || "All Dept"}</span>
-                 <ChevronDown size={12} className={`ml-1 text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
-               </div>
-               {isDeptDropdownOpen && (
-                 <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden py-1">
-                    <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Departments</div>
-                    {departments.map(d => (
-                       <div key={d} onClick={() => { setFilterDepartment(d); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
-                         {d}
-                         {filterDepartment === d && <Check size={11} className="text-indigo-500" />}
-                       </div>
-                    ))}
-                 </div>
-               )}
-             </div>
+            {/* Department Filter */}
+            <div className="relative">
+              <div onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)} className="flex items-center gap-2 h-8 px-3 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium cursor-pointer hover:border-indigo-400 transition shadow-sm">
+                <Filter size={11} className="text-gray-400" />
+                <span className="truncate">{filterDepartment || "All Dept"}</span>
+                <ChevronDown size={12} className={`ml-1 text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+              {isDeptDropdownOpen && (
+                <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden py-1">
+                  <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Departments</div>
+                  {departments.map(d => (
+                    <div key={d} onClick={() => { setFilterDepartment(d); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+                      {d}
+                      {filterDepartment === d && <Check size={11} className="text-indigo-500" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-             {/* Date Picker */}
-             <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
-               <Calendar size={11} className="text-gray-400" />
-               <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer" />
-             </div>
+            {/* Date Picker */}
+            <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
+              <Calendar size={11} className="text-gray-400" />
+              <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer" />
+            </div>
 
-             {/* Attendance Button */}
-             <button 
-               onClick={() => { 
-                 const userStr = localStorage.getItem('user');
-                 const user = userStr ? JSON.parse(userStr) : null;
-                 const isAdmin = user && user.Admin === 'Yes';
+            {/* Attendance Button */}
+            <button
+              onClick={() => {
+                const userStr = localStorage.getItem('user');
+                const user = userStr ? JSON.parse(userStr) : null;
+                const isAdmin = user && user.Admin === 'Yes';
 
-                 if (user && !isAdmin) {
-                   setModalFormData({
-                     code: user.Code || '',
-                     name: user.Name || '',
-                     type: user.Type || 'Full Time',
-                     department: user.Department || '',
-                     punchType: 'in'
-                   });
-                 } else {
-                   // If admin or no user, reset to empty form for manual selection
-                   setModalFormData({ code: '', name: '', type: '', department: '', punchType: 'in' });
-                 }
-                 setIsModalOpen(true); 
-                 fetchLocation(); 
-                 fetchUserList(); 
-               }}
-               className="flex items-center justify-center gap-2 h-8 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-95"
-             >
-               <span>Attendance</span>
-             </button>
+                if (user && !isAdmin) {
+                  setModalFormData({
+                    code: user.Code || '',
+                    name: user.Name || '',
+                    type: user.Type || 'Full Time',
+                    department: user.Department || '',
+                    punchType: 'in'
+                  });
+                } else {
+                  // If admin or no user, reset to empty form for manual selection
+                  setModalFormData({ code: '', name: '', type: '', department: '', punchType: 'in' });
+                }
+                setIsModalOpen(true);
+                fetchLocation();
+                fetchUserList();
+              }}
+              className="flex items-center justify-center gap-2 h-8 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-95"
+            >
+              <span>Attendance</span>
+            </button>
           </div>
         </div>
       </div>
@@ -502,9 +505,9 @@ const AttendanceDaily = () => {
       {/* 📊 Main Content Area */}
       <div className="overflow-hidden border border-gray-200 rounded-lg bg-white min-h-[530px] flex flex-col shadow-sm">
         {tableLoading ? (
-           <div className="flex-1 flex items-center justify-center p-12">
-             <LoadingSpinner message="Retrieving logs..." minHeight="450px" />
-           </div>
+          <div className="flex-1 flex items-center justify-center p-12">
+            <LoadingSpinner message="Retrieving logs..." minHeight="450px" />
+          </div>
         ) : (
           <>
             {/* Desktop Table View */}
@@ -534,7 +537,7 @@ const AttendanceDaily = () => {
                       currentItems.map((item) => (
                         <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700 font-normal uppercase">
-                             {item.name}
+                            {item.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase tracking-tight">#{item.empId}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-xs text-gray-500 font-normal tracking-tight">{item.date}</td>
@@ -543,9 +546,9 @@ const AttendanceDaily = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-indigo-600 font-normal">{item.workingHours}h</td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-rose-500 font-normal">+{item.lateMins}m</td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
-                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Present' ? 'bg-green-100 text-green-700' : (item.status === 'Holiday' ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700')}`}>
-                               {item.status}
-                             </span>
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Present' ? 'bg-green-100 text-green-700' : (item.status === 'Holiday' ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700')}`}>
+                              {item.status}
+                            </span>
                           </td>
                         </tr>
                       ))
@@ -575,55 +578,54 @@ const AttendanceDaily = () => {
 
             {/* Mobile Card View */}
             <div className="md:hidden flex flex-col h-[calc(105vh-320px)] bg-slate-50">
-                <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
-                  {currentItems.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center">
-                      <p className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">No records found</p>
-                    </div>
-                  ) : (
-                    currentItems.map((item) => (
-                      <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 space-y-3 relative overflow-hidden group active:bg-slate-50 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{item.empId}</p>
-                          </div>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                            item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' : 
+              <div className="flex-1 p-2 space-y-3 overflow-y-auto scrollbar-hide">
+                {currentItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-24 text-center">
+                    <p className="text-gray-400 text-xs font-bold uppercase tracking-widest italic">No records found</p>
+                  </div>
+                ) : (
+                  currentItems.map((item) => (
+                    <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-200/60 p-4 space-y-3 relative overflow-hidden group active:bg-slate-50 transition-colors">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{item.empId}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' :
                             (item.status === 'Holiday' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600')
                           }`}>
-                            {item.status}
-                          </span>
-                        </div>
+                          {item.status}
+                        </span>
+                      </div>
 
-                        <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
-                          <div className="space-y-0.5">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">In-Time</p>
-                             <p className="text-[11px] font-bold text-slate-700">{item.inTime || '—'}</p>
-                          </div>
-                          <div className="space-y-0.5 text-right">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Out-Time</p>
-                             <p className="text-[11px] font-bold text-slate-700">{item.outTime || '—'}</p>
-                          </div>
+                      <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
+                        <div className="space-y-0.5">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">In-Time</p>
+                          <p className="text-[11px] font-bold text-slate-700">{item.inTime || '—'}</p>
                         </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <div className="flex items-center gap-1.5">
-                             <Clock size={12} className="text-slate-300" />
-                             <span className="text-[11px] font-black text-slate-400 uppercase">{item.date}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{item.workingHours}h</span>
-                             <span className="text-[11px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg">+{item.lateMins}m</span>
-                          </div>
+                        <div className="space-y-0.5 text-right">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Out-Time</p>
+                          <p className="text-[11px] font-bold text-slate-700">{item.outTime || '—'}</p>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-                <div className="border-t border-gray-200 bg-white px-2 py-3 flex justify-center sticky bottom-0">
-                  {renderPaginationNav()}
-                </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={12} className="text-slate-300" />
+                          <span className="text-[11px] font-black text-slate-400 uppercase">{item.date}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg">{item.workingHours}h</span>
+                          <span className="text-[11px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg">+{item.lateMins}m</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="border-t border-gray-200 bg-white px-2 py-3 flex justify-center sticky bottom-0">
+                {renderPaginationNav()}
+              </div>
             </div>
           </>
         )}
@@ -633,7 +635,7 @@ const AttendanceDaily = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300 font-outfit">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100 relative">
-            
+
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div className="flex items-center gap-4">
@@ -642,7 +644,7 @@ const AttendanceDaily = () => {
                 </div>
                 <h2 className="text-xl font-bold text-gray-800 uppercase tracking-tight">New Attendance Entry</h2>
               </div>
-              <button 
+              <button
                 type="button"
                 onClick={() => { stopCamera(); setIsModalOpen(false); setCapturedImage(null); }}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-all"
@@ -660,10 +662,10 @@ const AttendanceDaily = () => {
                     const userStr = localStorage.getItem('user');
                     const user = userStr ? JSON.parse(userStr) : null;
                     const isAdmin = user && user.Admin === 'Yes';
-                    
+
                     if (user && !isAdmin) {
                       return (
-                        <input 
+                        <input
                           type="text"
                           value={modalFormData.code}
                           readOnly
@@ -672,7 +674,7 @@ const AttendanceDaily = () => {
                       );
                     } else {
                       return (
-                        <select 
+                        <select
                           value={modalFormData.code}
                           onChange={handleCodeChange}
                           className="h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
@@ -691,7 +693,7 @@ const AttendanceDaily = () => {
                 {/* Punch Status */}
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Punch Status</label>
-                  <select 
+                  <select
                     value={modalFormData.punchType}
                     onChange={(e) => setModalFormData({ ...modalFormData, punchType: e.target.value })}
                     className="h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
@@ -704,7 +706,7 @@ const AttendanceDaily = () => {
                 {/* Employee Name */}
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Employee Name</label>
-                  <input 
+                  <input
                     type="text"
                     value={modalFormData.name}
                     readOnly
@@ -716,7 +718,7 @@ const AttendanceDaily = () => {
                 {/* Department */}
                 <div className="flex flex-col gap-2">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Department</label>
-                  <input 
+                  <input
                     type="text"
                     value={modalFormData.department}
                     readOnly
@@ -738,7 +740,7 @@ const AttendanceDaily = () => {
                       </p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     type="button"
                     onClick={fetchLocation}
                     disabled={loadingLocation}
@@ -752,7 +754,7 @@ const AttendanceDaily = () => {
               {/* Camera Capture Module */}
               <div className="space-y-4 pt-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Identity Authentication</label>
-                
+
                 <div className="relative w-full aspect-[4/3] max-w-sm mx-auto bg-slate-50 border border-gray-200 rounded-2xl overflow-hidden flex flex-col items-center justify-center transition-all">
                   {cameraActive ? (
                     <video ref={videoRef} className="w-full h-full object-cover scale-x-[-1]" playsInline />
@@ -764,19 +766,19 @@ const AttendanceDaily = () => {
                       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Initialization Required</p>
                     </div>
                   )}
-                  
+
                   <canvas ref={canvasRef} className="hidden" />
                   {cameraActive && (
                     <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1 bg-black/50 backdrop-blur-md rounded-full border border-white/20">
-                       <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                       <span className="text-[9px] font-black text-white uppercase tracking-widest">Active Link</span>
+                      <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                      <span className="text-[9px] font-black text-white uppercase tracking-widest">Active Link</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center justify-center gap-3">
                   {!cameraActive ? (
-                    <button 
+                    <button
                       type="button"
                       onClick={startCamera}
                       className="px-8 py-3 bg-gray-900 hover:bg-black text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg"
@@ -785,7 +787,7 @@ const AttendanceDaily = () => {
                       <span>Initialize Authentication</span>
                     </button>
                   ) : (
-                    <button 
+                    <button
                       type="button"
                       onClick={capturePhoto}
                       className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg"
@@ -795,7 +797,7 @@ const AttendanceDaily = () => {
                     </button>
                   )}
                   {capturedImage && !cameraActive && (
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setCapturedImage(null)}
                       className="p-3 bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 hover:border-indigo-200 rounded-xl transition shadow-sm"
@@ -808,7 +810,7 @@ const AttendanceDaily = () => {
 
               {/* Submit Button */}
               <div className="pt-4">
-                <button 
+                <button
                   type="submit"
                   disabled={isPunching}
                   className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm uppercase tracking-widest rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-xl shadow-indigo-100 disabled:opacity-50"

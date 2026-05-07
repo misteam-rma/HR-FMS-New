@@ -26,21 +26,39 @@ const Attendance = () => {
       const result = await response.json();
       const rawData = result.data || result;
 
-      if (Array.isArray(rawData) && rawData.length > 1) {
+      if (Array.isArray(rawData) && rawData.length > 0) {
+        // Dynamic Header Detection
+        let headerRowIndex = 0;
+        for (let i = 0; i < Math.min(rawData.length, 10); i++) {
+          if (rawData[i] && rawData[i].some(cell => cell && cell.toString().toLowerCase().includes('date'))) {
+            headerRowIndex = i;
+            break;
+          }
+        }
+
+        const headers = rawData[headerRowIndex].map(h => h?.toString().trim() || '');
+        const dataRows = rawData.slice(headerRowIndex + 1);
+
         // Aggregation logic
         const groups = {}; // Key: empId + monthYear
         
-        rawData.slice(1).forEach(row => {
-          const empId = row[2]?.toString().trim();
-          const name = row[4]?.toString().trim();
-          const dept = row[5]?.toString().trim();
-          const dateStr = row[11]?.toString().trim(); // DD/MM/YYYY
-          const timeStr = row[12]?.toString().trim(); // HH:MM:SS
+        dataRows.forEach(row => {
+          const obj = {};
+          headers.forEach((header, colIndex) => {
+            obj[header] = row[colIndex] !== undefined && row[colIndex] !== null ? row[colIndex].toString().trim() : '';
+          });
+
+          const empId = obj['Employee Code'];
+          const name = obj['Name'];
+          const dept = obj['Department'];
+          const dateStr = obj['Date']; // DD/MM/YYYY
+          const timeStr = obj['Time']; // HH:MM:SS
           
           if (!empId || !dateStr) return;
 
           const parts = dateStr.split('/');
           if (parts.length < 3) return;
+          
           const month = new Date(parts[2], parts[1]-1, 1).toLocaleString('default', { month: 'long' });
           const year = parts[2];
           const key = `${empId}-${month}-${year}`;
@@ -51,7 +69,6 @@ const Attendance = () => {
               punchDaysSet: new Set(),
               lateDays: 0,
               punchesPerDay: {}, // date -> count
-              lastPunch: timeStr,
               totalWorking: 26,
               holidays: 4
             };
@@ -60,15 +77,12 @@ const Attendance = () => {
           const g = groups[key];
           g.punchDaysSet.add(dateStr);
           
-          // Late logic: Assuming in-punch if it's the first punch of the day
+          // Late logic: first punch of the day
           if (!g.punchesPerDay[dateStr]) {
             g.punchesPerDay[dateStr] = 0;
-            if (timeStr > "09:30:00") g.lateDays++;
+            if (timeStr && timeStr > "09:30:00") g.lateDays++;
           }
           g.punchesPerDay[dateStr]++;
-          
-          // Keep track of latest punch
-          if (timeStr > g.lastPunch) g.lastPunch = timeStr;
         });
 
         const aggregated = Object.values(groups).map(g => {
@@ -87,7 +101,10 @@ const Attendance = () => {
           };
         });
 
-        setAttendanceData(aggregated.reverse());
+        setAttendanceData(aggregated.sort((a, b) => {
+          // Sort by year and month descending
+          return 0; // Keeping original order or simple reverse for now
+        }).reverse());
       }
     } catch (err) {
       console.error("fetchAttendanceData Error:", err);
@@ -106,7 +123,6 @@ const Attendance = () => {
   }, [activeTab, filterMonth, searchTerm, filterDepartment]);
 
   const filteredData = attendanceData.filter(item => {
-    // Show all data without tab filtering
     const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = !filterDepartment || item.department === filterDepartment;
     const matchesMonth = !filterMonth || item.month === filterMonth;
@@ -127,15 +143,15 @@ const Attendance = () => {
   const renderPaginationNav = () => (
     <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px w-full justify-center sm:w-auto">
       <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} className="relative inline-flex items-center px-1.5 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50">
-        <ChevronRight className="h-4 w-4 rotate-180" />
+        <ChevronRight className="h-4 w-4 rotate-180" size={14} />
       </button>
       {[...Array(Math.max(1, Math.min(5, totalPages)))].map((_, i) => (
-        <button key={i} onClick={() => paginate(i+1)} className={`relative inline-flex items-center px-4 py-2 border text-[11px] font-bold ${currentPage === (i+1) ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"}`}>
+        <button key={i} onClick={() => paginate(i+1)} className={`relative inline-flex items-center px-3 py-1.5 border text-[11px] font-bold ${currentPage === (i+1) ? "z-10 bg-indigo-50 border-indigo-500 text-indigo-600 shadow-sm" : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"}`}>
           {i + 1}
         </button>
       ))}
       <button onClick={() => paginate(currentPage + 1)} disabled={currentPage >= totalPages} className="relative inline-flex items-center px-1.5 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50">
-        <ChevronRight className="h-4 w-4" />
+        <ChevronRight className="h-4 w-4" size={14} />
       </button>
     </nav>
   );
@@ -192,7 +208,7 @@ const Attendance = () => {
                 className="h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium outline-none shadow-sm hover:border-indigo-400 transition"
              >
                 <option value="">All Months</option>
-                {["January", "February", "March", "April"].map(m => (
+                {["January", "February", "March", "April", "May", "June", "July"].map(m => (
                   <option key={m} value={m}>{m.toUpperCase()}</option>
                 ))}
              </select>
