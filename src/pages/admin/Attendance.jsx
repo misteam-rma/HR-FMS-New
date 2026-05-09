@@ -22,7 +22,7 @@ const Attendance = () => {
   const fetchAttendanceData = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Monthly Report&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -30,7 +30,7 @@ const Attendance = () => {
         // Dynamic Header Detection
         let headerRowIndex = 0;
         for (let i = 0; i < Math.min(rawData.length, 10); i++) {
-          if (rawData[i] && rawData[i].some(cell => cell && cell.toString().toLowerCase().includes('date'))) {
+          if (rawData[i] && rawData[i].some(cell => cell && cell.toString().toLowerCase().includes('month'))) {
             headerRowIndex = i;
             break;
           }
@@ -39,76 +39,37 @@ const Attendance = () => {
         const headers = rawData[headerRowIndex].map(h => h?.toString().trim() || '');
         const dataRows = rawData.slice(headerRowIndex + 1);
 
-        // Aggregation logic
-        const groups = {}; // Key: empId + monthYear
-        
-        dataRows.forEach(row => {
+        const aggregated = dataRows
+          .filter(row => row.some(cell => cell && cell.toString().trim() !== '')) // Skip blank rows
+          .map((row, index) => {
           const obj = {};
           headers.forEach((header, colIndex) => {
-            obj[header] = row[colIndex] !== undefined && row[colIndex] !== null ? row[colIndex].toString().trim() : '';
+            const key = header.toLowerCase().replace(/\s+/g, '');
+            obj[key] = row[colIndex] !== undefined && row[colIndex] !== null ? row[colIndex].toString().trim() : '';
           });
 
-          const empId = obj['Employee Code'];
-          const name = obj['Name'];
-          const dept = obj['Department'];
-          const dateStr = obj['Date']; // DD/MM/YYYY
-          const timeStr = obj['Time']; // HH:MM:SS
-          
-          if (!empId || !dateStr) return;
-
-          const parts = dateStr.split('/');
-          if (parts.length < 3) return;
-          
-          const month = new Date(parts[2], parts[1]-1, 1).toLocaleString('default', { month: 'long' });
-          const year = parts[2];
-          const key = `${empId}-${month}-${year}`;
-
-          if (!groups[key]) {
-            groups[key] = {
-              year, month, empId, name, department: dept,
-              punchDaysSet: new Set(),
-              lateDays: 0,
-              punchesPerDay: {}, // date -> count
-              totalWorking: 26,
-              holidays: 4
-            };
-          }
-
-          const g = groups[key];
-          g.punchDaysSet.add(dateStr);
-          
-          // Late logic: first punch of the day
-          if (!g.punchesPerDay[dateStr]) {
-            g.punchesPerDay[dateStr] = 0;
-            if (timeStr && timeStr > "09:30:00") g.lateDays++;
-          }
-          g.punchesPerDay[dateStr]++;
-        });
-
-        const aggregated = Object.values(groups).map(g => {
-          const punchDays = g.punchDaysSet.size;
-          const punchMiss = Object.values(g.punchesPerDay).filter(count => count === 1).length;
-          const absents = Math.max(0, g.totalWorking - punchDays);
-          
+          // Mapping based on "Monthly Report" structure
           return {
-            ...g,
-            punchDays,
-            absents,
-            punchMiss,
-            status: absents > 2 || punchMiss > 3 ? "Under Review" : "Verified",
-            lateAllowed: 2,
-            lateNotAllowed: Math.max(0, g.lateDays - 2)
+            year: obj['year'] || new Date().getFullYear(),
+            month: obj['monthname'] || obj['month'] || obj['analyticsmonth'] || '',
+            empId: obj['empid'] || obj['employeecode'] || '',
+            name: obj['name'] || obj['employeename'] || '',
+            department: obj['department'] || '',
+            totalDays: obj['dayinmonth'] || '30',
+            punchDays: obj['totalpresent'] || obj['present'] || obj['netpresent'] || obj['punchdays'] || '0',
+            absents: obj['totalabsent'] || obj['absents'] || obj['totalabsents'] || '0',
+            lateDays: obj['late'] || obj['latemarks'] || '0',
+            lateNotAllowed: obj['laten'] || obj['late(n)'] || '0',
+            punchMiss: obj['miss'] || obj['misspunch'] || '0',
+            status: obj['status'] || 'Verified'
           };
         });
 
-        setAttendanceData(aggregated.sort((a, b) => {
-          // Sort by year and month descending
-          return 0; // Keeping original order or simple reverse for now
-        }).reverse());
+        setAttendanceData(aggregated);
       }
     } catch (err) {
       console.error("fetchAttendanceData Error:", err);
-      toast.error("Failed to sync attendance data");
+      toast.error("Failed to sync monthly report");
     } finally {
       setTableLoading(false);
     }
@@ -124,9 +85,9 @@ const Attendance = () => {
 
   const filteredData = attendanceData.filter(item => {
     const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = !filterDepartment || item.department === filterDepartment;
+    const matchesName = !filterDepartment || item.name === filterDepartment;
     const matchesMonth = !filterMonth || item.month === filterMonth;
-    return matchesSearch && matchesDept && matchesMonth;
+    return matchesSearch && matchesName && matchesMonth;
   });
 
   const departments = [...new Set(attendanceData.map(d => d.department))].sort();
@@ -181,20 +142,20 @@ const Attendance = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:flex lg:items-center gap-2">
-             {/* Department Filter */}
+             {/* Name Filter */}
              <div className="relative">
                <div onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)} className="flex items-center gap-2 h-8 px-3 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium cursor-pointer hover:border-indigo-400 transition shadow-sm">
                  <Filter size={11} className="text-gray-400" />
-                 <span className="truncate">{filterDepartment || "All Dept"}</span>
+                 <span className="truncate">{filterDepartment || "All Names"}</span>
                  <ChevronDown size={12} className={`ml-1 text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
                </div>
                {isDeptDropdownOpen && (
-                 <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden py-1">
-                    <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Departments</div>
-                    {departments.map(d => (
-                       <div key={d} onClick={() => { setFilterDepartment(d); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
-                         {d}
-                         {filterDepartment === d && <Check size={11} className="text-indigo-500" />}
+                 <div className="absolute top-full right-0 mt-1 w-48 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1 scrollbar-hide">
+                    <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Names</div>
+                    {[...new Set(attendanceData.map(d => d.name))].sort().map(name => (
+                       <div key={name} onClick={() => { setFilterDepartment(name); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+                         {name}
+                         {filterDepartment === name && <Check size={11} className="text-indigo-500" />}
                        </div>
                     ))}
                  </div>
@@ -235,9 +196,9 @@ const Attendance = () => {
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Analytics Month</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Net Present</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Total Absents</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late Marks</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late (N)</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Miss Punch</th>
+                      {/* <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late Marks</th> */}
+                      {/* <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Late (N)</th> */}
+                      {/* <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Miss Punch</th> */}
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
                     </tr>
                   </thead>
@@ -258,9 +219,9 @@ const Attendance = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal uppercase tracking-tight">{item.month} {item.year}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-emerald-600 font-normal">{item.punchDays} Days</td>
                           <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.absents}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateDays}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateNotAllowed}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.punchMiss}</td>
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateDays}</td> */}
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.lateNotAllowed}</td> */}
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500 font-normal">{item.punchMiss}</td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Verified' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700'}`}>
                                {item.status}
@@ -325,22 +286,14 @@ const Attendance = () => {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-2 text-center pt-1">
+                        <div className="flex justify-between items-center px-2 pt-1">
                           <div className="space-y-0.5">
-                             <p className="text-[8px] font-black text-slate-400 uppercase">Absents</p>
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Total Absents</p>
                              <p className="text-[11px] font-bold text-slate-600">{item.absents}</p>
                           </div>
-                          <div className="space-y-0.5">
-                             <p className="text-[8px] font-black text-slate-400 uppercase">Late</p>
-                             <p className="text-[11px] font-bold text-slate-600">{item.lateDays}</p>
-                          </div>
-                          <div className="space-y-0.5">
-                             <p className="text-[8px] font-black text-slate-400 uppercase">Late (N)</p>
-                             <p className="text-[11px] font-bold text-slate-600">{item.lateNotAllowed}</p>
-                          </div>
-                          <div className="space-y-0.5">
-                             <p className="text-[8px] font-black text-slate-400 uppercase">Miss</p>
-                             <p className="text-[11px] font-bold text-slate-600">{item.punchMiss}</p>
+                          <div className="text-right">
+                             <p className="text-[8px] font-black text-slate-400 uppercase">Status</p>
+                             <p className={`text-[10px] font-bold ${item.status === 'Verified' ? 'text-indigo-600' : 'text-amber-600'}`}>{item.status}</p>
                           </div>
                         </div>
                       </div>

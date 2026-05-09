@@ -386,11 +386,15 @@ const AttendanceDaily = () => {
   }, []);
 
   const filteredData = attendanceData.filter(item => {
-    // Show all data without tab filtering
-    const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = !filterDepartment || item.department === filterDepartment;
+    const matchesSearch = !searchTerm || 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      item.empId.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesName = !filterDepartment || item.name === filterDepartment;
+    
     const matchesDate = !filterDate || item.date === filterDate;
-    return matchesSearch && matchesDept && matchesDate;
+    
+    return matchesSearch && matchesName && matchesDate;
   });
 
   const departments = [...new Set(attendanceData.map(d => d.department))].sort();
@@ -445,20 +449,20 @@ const AttendanceDaily = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:flex lg:items-center gap-2">
-            {/* Department Filter */}
+            {/* Name Filter */}
             <div className="relative">
               <div onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)} className="flex items-center gap-2 h-8 px-3 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium cursor-pointer hover:border-indigo-400 transition shadow-sm">
                 <Filter size={11} className="text-gray-400" />
-                <span className="truncate">{filterDepartment || "All Dept"}</span>
+                <span className="truncate">{filterDepartment || "All Names"}</span>
                 <ChevronDown size={12} className={`ml-1 text-gray-400 transition-transform ${isDeptDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
               {isDeptDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden py-1">
-                  <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Departments</div>
-                  {departments.map(d => (
-                    <div key={d} onClick={() => { setFilterDepartment(d); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
-                      {d}
-                      {filterDepartment === d && <Check size={11} className="text-indigo-500" />}
+                <div className="absolute top-full right-0 mt-1 w-48 max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg z-50 py-1 scrollbar-hide">
+                  <div onClick={() => { setFilterDepartment(""); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50">All Names</div>
+                  {[...new Set(attendanceData.map(d => d.name))].sort().map(name => (
+                    <div key={name} onClick={() => { setFilterDepartment(name); setIsDeptDropdownOpen(false); setCurrentPage(1); }} className="px-3 py-1.5 text-[11px] font-normal cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+                      {name}
+                      {filterDepartment === name && <Check size={11} className="text-indigo-500" />}
                     </div>
                   ))}
                 </div>
