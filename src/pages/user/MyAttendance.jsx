@@ -295,37 +295,59 @@ const MyAttendance = () => {
     e.preventDefault();
     if (!formData.code || !formData.name) return toast.error("Please select valid employee code");
 
-    // Punch Logic Validation
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, '0');
-    const todayStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-    const todayRecord = attendanceData.find(r => r.Date === todayStr);
-
-    if (formData.punchType === 'out') {
-      if (!todayRecord || !todayRecord['Check In'] || todayRecord['Check In'] === '-') {
-        return toast.error("Access Denied: You must PUNCH IN first for today.");
-      }
-      if (todayRecord['Check Out'] && todayRecord['Check Out'] !== '-') {
-        return toast.error("Already Punched Out: Your daily shift log is already complete.");
-      }
-    } else if (formData.punchType === 'in') {
-      if (todayRecord && todayRecord['Check In'] && todayRecord['Check In'] !== '-') {
-        if (!todayRecord['Check Out'] || todayRecord['Check Out'] === '-') {
-          return toast.error("Active Session: You are already Punched In. Please Punch Out first.");
-        } else {
-          return toast.error("Shift Completed: You have already Punched In and Out for today.");
-        }
-      }
-    }
-
-    if (!capturedImage) return toast.error("Selfie is mandatory");
-    if (!locationData.latitude) return toast.error("Location is mandatory");
-
     setSubmitting(true);
-    const loadingToast = toast.loading('Submitting attendance...');
+    const loadingToast = toast.loading('Syncing and submitting attendance...');
 
     try {
-      // 1. Upload image
+      // 1. Fetch fresh data for validation and serial calculation
+      const fetchRes = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const fetchResult = await fetchRes.json();
+      const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
+
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      // Find if there's an active session for today in fresh data
+      const userTodayRows = existingData.slice(1).filter(row => {
+        return row[2]?.toString().trim() === formData.code && row[11]?.toString().trim() === dateStr;
+      });
+
+      const hasIn = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'IN');
+      const hasOut = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'OUT');
+
+      if (formData.punchType === 'out') {
+        if (!hasIn) {
+          setSubmitting(false);
+          return toast.error("Access Denied: You must PUNCH IN first for today.", { id: loadingToast });
+        }
+        if (hasOut) {
+          setSubmitting(false);
+          return toast.error("Already Punched Out: Your daily shift log is already complete.", { id: loadingToast });
+        }
+      } else if (formData.punchType === 'in') {
+        if (hasIn) {
+          if (!hasOut) {
+            setSubmitting(false);
+            return toast.error("Active Session: You are already Punched In. Please Punch Out first.", { id: loadingToast });
+          } else {
+            setSubmitting(false);
+            return toast.error("Shift Completed: You have already Punched In and Out for today.", { id: loadingToast });
+          }
+        }
+      }
+
+      if (!capturedImage) {
+        setSubmitting(false);
+        return toast.error("Selfie is mandatory", { id: loadingToast });
+      }
+      if (!locationData.latitude) {
+        setSubmitting(false);
+        return toast.error("Location is mandatory", { id: loadingToast });
+      }
+
+      // 2. Upload image
       const folderId = formData.punchType === 'in' 
         ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID 
         : import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_OUT_FOLDER_ID;
@@ -347,10 +369,8 @@ const MyAttendance = () => {
       const fileId = uploadResult.fileUrl.split('id=')[1];
       const imageUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view?usp=sharing` : uploadResult.fileUrl;
 
-      // 2. Get Serial No
-      const fetchRes = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
-      const fetchResult = await fetchRes.json();
-      const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
+      // 3. (Optional: Update logic removed per user request)
+
       let maxSerial = 0;
       if (Array.isArray(existingData) && existingData.length > 1) {
         existingData.slice(1).forEach(row => {
@@ -360,12 +380,8 @@ const MyAttendance = () => {
       }
       const nextSerial = maxSerial + 1;
 
-      // 3. Insert Row
-      const now = new Date();
-      const pad = (n) => String(n).padStart(2, '0');
+      // 4. Insert Row
       const timestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-      const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
       const rowData = [
         timestamp,

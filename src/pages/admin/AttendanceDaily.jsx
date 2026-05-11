@@ -224,8 +224,49 @@ const AttendanceDaily = () => {
     if (!locationData.latitude) return toast.error("Please capture geolocation data");
 
     setIsPunching(true);
+    const loadingToast = toast.loading('Syncing and submitting attendance...');
+
     try {
-      // 1. Upload image to Google Drive
+      // 1. Fetch current Attendance sheet for validation and Serial No calculation
+      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const fetchResult = await fetchResponse.json();
+      const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
+
+      const now = new Date();
+      const pad = (num) => String(num).padStart(2, '0');
+      const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
+      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+      // Find if there's an active session for today in fresh data
+      const userTodayRows = existingData.slice(1).filter(row => {
+        return row[2]?.toString().trim() === modalFormData.code && row[11]?.toString().trim() === dateStr;
+      });
+
+      const hasIn = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'IN');
+      const hasOut = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'OUT');
+
+      if (modalFormData.punchType === 'out') {
+        if (!hasIn) {
+          setIsPunching(false);
+          return toast.error("Access Denied: Employee must PUNCH IN first for today.", { id: loadingToast });
+        }
+        if (hasOut) {
+          setIsPunching(false);
+          return toast.error("Already Punched Out: Daily shift log for this employee is already complete.", { id: loadingToast });
+        }
+      } else if (modalFormData.punchType === 'in') {
+        if (hasIn) {
+          if (!hasOut) {
+            setIsPunching(false);
+            return toast.error("Active Session: Employee is already Punched In. Please Punch Out first.", { id: loadingToast });
+          } else {
+            setIsPunching(false);
+            return toast.error("Shift Completed: Employee has already Punched In and Out for today.", { id: loadingToast });
+          }
+        }
+      }
+
+      // 2. Upload image to Google Drive
       let imageUrl = null;
       const folderId = modalFormData.punchType === 'in'
         ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID
@@ -254,10 +295,7 @@ const AttendanceDaily = () => {
         throw new Error(uploadResult.error || "Image upload failed. Please try again.");
       }
 
-      // 2. Fetch current Attendance sheet to generate Serial No
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
-      const fetchResult = await fetchResponse.json();
-      const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
+      // 3. (Optional: Update logic removed per user request)
 
       let maxSerial = 0;
       if (Array.isArray(existingData) && existingData.length > 1) {
@@ -269,11 +307,7 @@ const AttendanceDaily = () => {
       }
       const nextSerial = maxSerial + 1;
 
-      const now = new Date();
-      const pad = (num) => String(num).padStart(2, '0');
       const timestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-      const dateStr = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()}`;
-      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
       const locationLink = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
 
       // 3. Submitting to Attendance sheet
@@ -340,37 +374,82 @@ const AttendanceDaily = () => {
       const headers = rawData[headerRowIndex].map(h => h?.toString().trim() || '');
       const dataRows = rawData.slice(headerRowIndex + 1);
 
-        const processedData = dataRows.map((row, index) => {
-          // Explicit mapping based on Sheet Screenshot: G=6 (Punch Status), M=12 (Time)
-          const rawStatus = (row[6] || '').toString().trim().toUpperCase();
-          const punchTime = (row[12] || '').toString().trim() || '--:--';
-          
-          const isIn = rawStatus.includes('IN');
-          const isOut = rawStatus.includes('OUT');
-          
-          // Mapping based on Screenshot: C=2 (ID), E=4 (Name), L=11 (Date), F=5 (Dept), K=10 (Location)
+        // Group data by Employee ID and Date
+        const groups = {};
+        dataRows.forEach((row, index) => {
           const empId = (row[2] || '').toString().trim();
-          const empName = (row[4] || '').toString().trim();
           const date = (row[11] || '').toString().trim();
-          const dept = (row[5] || '').toString().trim();
-          const location = (row[10] || 'Location NA').toString().trim();
+          if (!empId || !date) return;
 
-          return {
-            id: `idx-${index}`,
-            name: empName || 'Unknown',
-            empId: empId || 'N/A',
-            date: date || 'N/A',
-            inTime: isIn ? punchTime : '--:--',
-            outTime: isOut ? punchTime : '--:--',
-            workingHours: '0', 
-            lateMins: '0',
-            status: isIn ? 'Present' : 'Punch Out',
-            location: location,
-            department: dept
-          };
+          const key = `${empId}_${date}`;
+          const rawStatus = (row[6] || '').toString().trim().toUpperCase();
+          const punchTime = (row[12] || '').toString().trim();
+          const outTimeFromP = (row[15] || '').toString().trim(); // Column P
+
+          if (!groups[key]) {
+            groups[key] = {
+              id: `group-${empId}-${date}`,
+              name: (row[4] || 'Unknown').toString().trim(),
+              empId: empId,
+              date: date,
+              inTime: '--:--',
+              outTime: '--:--',
+              workingHours: '0',
+              lateMins: '0',
+              status: 'Present',
+              location: (row[10] || 'Location NA').toString().trim(),
+              department: (row[5] || '').toString().trim()
+            };
+          }
+
+          if (rawStatus.includes('IN')) {
+            groups[key].inTime = punchTime || '--:--';
+            // If Column P has an out time, use it
+            if (outTimeFromP && outTimeFromP !== '--:--') {
+              groups[key].outTime = outTimeFromP;
+            }
+          } else if (rawStatus.includes('OUT')) {
+            groups[key].outTime = punchTime || '--:--';
+          }
         });
 
-      setAttendanceData(processedData);
+        // Convert groups object to array and calculate working hours
+        const processedData = Object.values(groups).map(group => {
+          if (group.inTime !== '--:--' && group.outTime !== '--:--') {
+            try {
+              const [h1, m1, s1] = group.inTime.split(':').map(Number);
+              const [h2, m2, s2] = group.outTime.split(':').map(Number);
+              const d1 = new Date(2000, 0, 1, h1, m1, s1 || 0);
+              const d2 = new Date(2000, 0, 1, h2, m2, s2 || 0);
+              const diffMs = d2 - d1;
+              if (diffMs > 0) {
+                group.workingHours = (diffMs / (1000 * 60 * 60)).toFixed(1);
+              }
+            } catch (e) {
+              console.error("Working hours calculation error:", e);
+            }
+          }
+          // Set status based on completion
+          if (group.inTime !== '--:--' && group.outTime !== '--:--') {
+            group.status = 'Completed';
+          } else if (group.inTime !== '--:--') {
+            group.status = 'Present';
+          } else if (group.outTime !== '--:--') {
+            group.status = 'Punch Out';
+          }
+          
+          return group;
+        });
+
+        // Sort by date (descending) and name
+        processedData.sort((a, b) => {
+          const dateA = a.date.split('/').reverse().join('');
+          const dateB = b.date.split('/').reverse().join('');
+          if (dateB !== dateA) return dateB.localeCompare(dateA);
+          return a.name.localeCompare(b.name);
+        });
+
+        setAttendanceData(processedData);
     } catch (err) {
       console.error("fetchReportDailySheet error:", err);
       setError(err.message);
