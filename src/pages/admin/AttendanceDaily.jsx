@@ -471,7 +471,25 @@ const AttendanceDaily = () => {
     
     const matchesName = !filterDepartment || item.name === filterDepartment;
     
-    const matchesDate = !filterDate || item.date === filterDate;
+    // Normalize date for comparison (Handles DD/MM/YYYY vs YYYY-MM-DD and locale variations)
+    const matchesDate = !filterDate || (() => {
+      if (!item.date || item.date === 'N/A') return false;
+      
+      // Convert filterDate (YYYY-MM-DD) to integers
+      const [fYear, fMonth, fDay] = filterDate.split('-').map(Number);
+      
+      // Split item.date (Supports / or - as separators)
+      const dateParts = item.date.split(/[\/\-]/).map(Number);
+      if (dateParts.length !== 3) return false;
+      
+      const [p1, p2, p3] = dateParts;
+      
+      // Try both D/M/Y and M/D/Y orders
+      const isDMY = p1 === fDay && p2 === fMonth && p3 === fYear;
+      const isMDY = p1 === fMonth && p2 === fDay && p3 === fYear;
+      
+      return isDMY || isMDY;
+    })();
     
     return matchesSearch && matchesName && matchesDate;
   });
