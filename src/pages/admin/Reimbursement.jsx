@@ -35,6 +35,7 @@ const Reimbursement = () => {
       employeeName: isAdmin ? '' : (user?.Name || ''),
       seniorCode: '',
       seniorName: '',
+      employeeType: user?.['Employee Type'] || user?.['User Type'] || 'Field Staff',
       vehicleType: '2 Wheeler',
       ratePerKm: '3.5',
       visits: [{ date: new Date().toISOString().split('T')[0], place: '', km: '' }],
@@ -70,15 +71,25 @@ const Reimbursement = () => {
           // Senior Data: Column L (index 11) for Code and Column K (index 10) for Name
           const seniorCode = row[11]?.toString().trim();
           const seniorName = row[10]?.toString().trim();
+          const seniorType = row[2]?.toString().trim(); // Column C
           if (seniorCode) {
-            combinedSeniors.push({ code: seniorCode, name: seniorName || seniorCode });
+            combinedSeniors.push({ 
+              code: seniorCode, 
+              name: seniorName || seniorCode,
+              type: seniorType || 'Field Staff'
+            });
           }
 
           // Employee Data: Column J (index 9) for Code and Column I (index 8) for Name
           const empCode = row[9]?.toString().trim();
           const empName = row[8]?.toString().trim();
+          const empType = row[2]?.toString().trim(); // Column C
           if (empCode) {
-            combinedEmployees.push({ code: empCode, name: empName || empCode });
+            combinedEmployees.push({ 
+              code: empCode, 
+              name: empName || empCode,
+              type: empType || 'Field Staff'
+            });
           }
 
           // Places logic: Column G (6) for Name, Column H (7) for KM
@@ -224,8 +235,7 @@ const Reimbursement = () => {
 
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : {};
-      const article = articleList.find(a => a.code === formData.seniorCode);
-      const empType = article?.type || 'Field Staff';
+      const empType = formData.employeeType || 'Field Staff';
       const now = new Date();
       const timestamp = now.toLocaleString();
       const rateNum = parseFloat(formData.ratePerKm) || 0;
@@ -364,8 +374,8 @@ const Reimbursement = () => {
         ) : (
           <>
             {/* Desktop View */}
-            <div className="hidden md:block flex-1 flex flex-col">
-              <div className="flex-1 overflow-x-auto">
+            <div className="hidden md:flex flex-col border border-gray-100 rounded-lg bg-white overflow-hidden shadow-sm flex-1">
+              <div className="overflow-x-auto max-h-[calc(105vh-350px)] scrollbar-hide">
                 <table className="min-w-full divide-y divide-gray-200 border-collapse">
                   <thead className="bg-gray-50">
                     <tr>
@@ -513,7 +523,8 @@ const Reimbursement = () => {
                         setFormData({ 
                           ...formData, 
                           employeeCode: code,
-                          employeeName: emp ? emp.name : '' 
+                          employeeName: emp ? emp.name : '',
+                          employeeType: emp ? emp.type : (user?.['Employee Type'] || 'Field Staff')
                         });
                       }}
                       className="w-full h-10 px-3 bg-white border border-gray-200 rounded-lg text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
