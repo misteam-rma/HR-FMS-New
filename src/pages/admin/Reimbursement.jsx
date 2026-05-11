@@ -320,7 +320,9 @@ const Reimbursement = () => {
   });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
   return (
     <div className="max-w-full mx-auto px-1 sm:px-2 lg:px-4 py-4 space-y-4 md:space-y-6 pb-20 md:pb-8 font-outfit">
@@ -409,7 +411,7 @@ const Reimbursement = () => {
               </div>
               {/* Desktop Pagination */}
               <div className="px-4 py-3 bg-white border-t border-gray-200 flex items-center justify-between">
-                <p className="text-[13px] text-gray-600 font-medium tracking-wide">Showing <span className="font-bold text-gray-900">{currentItems.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, claims.length)}</span> of <span className="font-bold text-gray-900">{claims.length}</span></p>
+                <p className="text-[13px] text-gray-600 font-medium tracking-wide">Showing <span className="font-bold text-gray-900">{currentItems.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-bold text-gray-900">{Math.min(indexOfLastItem, filteredData.length)}</span> of <span className="font-bold text-gray-900">{filteredData.length}</span></p>
                 <div className="flex gap-2">
                   <button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"><ChevronRight size={16} className="rotate-180" /></button>
                   <button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="p-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"><ChevronRight size={16} /></button>
