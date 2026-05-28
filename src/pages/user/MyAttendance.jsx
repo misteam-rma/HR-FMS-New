@@ -22,7 +22,7 @@ const MyAttendance = () => {
   const [formData, setFormData] = useState({
     code: user.Code || '',
     name: user.Name || '',
-    type: user.Type || '',
+    type: user.Type || 'Article',
     department: user.Department || '',
     punchType: 'in',
   });
@@ -281,10 +281,10 @@ const MyAttendance = () => {
     if (name === 'code') {
       const employee = userList.find(u => u.code === value);
       if (employee) {
-        setFormData(prev => ({ ...prev, code: value, name: employee.name, type: employee.type, department: employee.department }));
+        setFormData(prev => ({ ...prev, code: value, name: employee.name, type: employee.type || 'Article', department: employee.department }));
         toast.success(`Identified: ${employee.name}`);
       } else {
-        setFormData(prev => ({ ...prev, code: value, name: '', type: '', department: '' }));
+        setFormData(prev => ({ ...prev, code: value, name: '', type: 'Article', department: '' }));
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -314,8 +314,14 @@ const MyAttendance = () => {
         return row[2]?.toString().trim() === formData.code && row[11]?.toString().trim() === dateStr;
       });
 
-      const hasIn = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'IN');
-      const hasOut = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'OUT');
+      const hasIn = userTodayRows.some(row => {
+        const val = row[6]?.toString().trim().toUpperCase();
+        return val === 'IN' || val === 'PUNCH IN';
+      });
+      const hasOut = userTodayRows.some(row => {
+        const val = row[6]?.toString().trim().toUpperCase();
+        return val === 'OUT' || val === 'PUNCH OUT';
+      });
 
       if (formData.punchType === 'out') {
         if (!hasIn) {
@@ -387,17 +393,18 @@ const MyAttendance = () => {
         timestamp,
         nextSerial,
         formData.code,
-        formData.type,
+        formData.type || 'Article',
         formData.name,
         formData.department,
-        formData.punchType.toUpperCase(),
+        formData.punchType.toLowerCase() === 'in' ? 'Punch In' : 'Punch Out',
         imageUrl,
         locationData.latitude,
         locationData.longitude,
         locationData.locationName,
         dateStr,
         timeStr,
-        `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`
+        `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`,
+        now.toLocaleString('en-US', { month: 'long' })
       ];
 
       const res = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
@@ -415,7 +422,7 @@ const MyAttendance = () => {
         setFormData({ 
           code: user.Code || '',
           name: user.Name || '',
-          type: user.Type || '',
+          type: user.Type || 'Article',
           department: user.Department || '',
           punchType: 'in' 
         });

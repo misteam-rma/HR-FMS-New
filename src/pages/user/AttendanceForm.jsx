@@ -215,7 +215,7 @@ const AttendanceForm = () => {
       const rowData = [
         isAdmin ? 'Admin' : 'Employee',
         formData.code,
-        punchStatus.toUpperCase(),
+        punchStatus.toLowerCase() === 'in' ? 'Punch In' : 'Punch Out',
         'N/A', // Client Name
         location.lat.toString(),
         location.lng.toString(),
@@ -227,7 +227,7 @@ const AttendanceForm = () => {
         'Active',
         location.lat.toString(),
         location.lng.toString(),
-        'Verified',
+        now.toLocaleString('en-US', { month: 'long' }), // O
         bufferTime
       ];
 

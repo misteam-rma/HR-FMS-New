@@ -14,7 +14,11 @@ const AttendanceDaily = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
-  const [filterDate, setFilterDate] = useState("");
+  const [filterDate, setFilterDate] = useState(() => {
+    const today = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [tableLoading, setTableLoading] = useState(false);
@@ -168,7 +172,7 @@ const AttendanceDaily = () => {
         ...modalFormData,
         code: selectedCode,
         name: employee.name,
-        type: employee.type,
+        type: employee.type || 'Article',
         department: employee.department
       });
       toast.success(`Employee ${employee.name} identified!`);
@@ -177,7 +181,7 @@ const AttendanceDaily = () => {
         ...modalFormData,
         code: selectedCode,
         name: '',
-        type: '',
+        type: 'Article',
         department: ''
       });
     }
@@ -242,8 +246,14 @@ const AttendanceDaily = () => {
         return row[2]?.toString().trim() === modalFormData.code && row[11]?.toString().trim() === dateStr;
       });
 
-      const hasIn = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'IN');
-      const hasOut = userTodayRows.some(row => row[6]?.toString().trim().toUpperCase() === 'OUT');
+      const hasIn = userTodayRows.some(row => {
+        const val = row[6]?.toString().trim().toUpperCase();
+        return val === 'IN' || val === 'PUNCH IN';
+      });
+      const hasOut = userTodayRows.some(row => {
+        const val = row[6]?.toString().trim().toUpperCase();
+        return val === 'OUT' || val === 'PUNCH OUT';
+      });
 
       if (modalFormData.punchType === 'out') {
         if (!hasIn) {
@@ -321,17 +331,18 @@ const AttendanceDaily = () => {
             timestamp,                          // A: Timestamp
             nextSerial,                         // B: Serial No
             modalFormData.code,                 // C: Employee Code
-            modalFormData.type,                 // D: Employee Type
+            modalFormData.type || 'Article',    // D: Employee Type
             modalFormData.name,                 // E: Employee Name
             modalFormData.department,           // F: Department
-            modalFormData.punchType.toUpperCase(), // G: Punch Status
+            modalFormData.punchType.toLowerCase() === 'in' ? 'Punch In' : 'Punch Out', // G: Punch Status
             imageUrl,                           // H: Live Selfie Capture (URL)
             locationData.latitude,              // I: Latitude
             locationData.longitude,             // J: Longitude
             locationData.locationName,          // K: Location name
             dateStr,                            // L: Date
             timeStr,                            // M: Time
-            locationLink                        // N: Location Link
+            locationLink,                       // N: Location Link
+            now.toLocaleString('en-US', { month: 'long' }) // O: Month name only
           ])
         })
       });
@@ -339,7 +350,7 @@ const AttendanceDaily = () => {
       toast.success(`Employee punched ${modalFormData.punchType.toUpperCase()} successfully!`);
       setIsModalOpen(false);
       setCapturedImage(null);
-      setModalFormData({ code: '', name: '', type: '', department: '', punchType: 'in' });
+      setModalFormData({ code: '', name: '', type: 'Article', department: '', punchType: 'in' });
       setLocationData({ latitude: '', longitude: '', locationName: '' });
       fetchReportDailySheet();
     } catch (err) {
@@ -583,13 +594,13 @@ const AttendanceDaily = () => {
                   setModalFormData({
                     code: user.Code || '',
                     name: user.Name || '',
-                    type: user.Type || 'Full Time',
+                    type: user.Type || 'Article',
                     department: user.Department || '',
                     punchType: 'in'
                   });
                 } else {
                   // If admin or no user, reset to empty form for manual selection
-                  setModalFormData({ code: '', name: '', type: '', department: '', punchType: 'in' });
+                  setModalFormData({ code: '', name: '', type: 'Article', department: '', punchType: 'in' });
                 }
                 setIsModalOpen(true);
                 fetchLocation();
