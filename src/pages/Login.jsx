@@ -8,8 +8,9 @@ import logo from '../Assets/RMAALL.png';
 import officeBg from '../Assets/office-bg.png';
 import { normalizeRole } from '../utils/auth';
 
-const SHEET_API_URL = `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`;
-const LEAVING_API_URL = `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`;
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec';
+const SHEET_API_URL = `${SCRIPT_URL}?sheet=USER&action=fetch`;
+const LEAVING_API_URL = `${SCRIPT_URL}?sheet=LEAVING&action=fetch`;
 
 localStorage.removeItem('hasSeenLanguageHint');
 
