@@ -26,12 +26,13 @@ const Login = () => {
     setSubmitting(true);
 
     try {
-      const [userRes, leavingRes] = await Promise.all([
-        fetch(SHEET_API_URL),
-        fetch(LEAVING_API_URL)
-      ]);
+      const res = await fetch(
+        `https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec?sheet=USER&action=fetch`
+      );
+      const data = await res.json();
 
-      const userJson = await userRes.json();
+      const userJson = data;
+      const leavingRes = await fetch(LEAVING_API_URL);
       const leavingJson = await leavingRes.json();
 
       if (!userJson.success || !leavingJson.success) {
@@ -93,7 +94,7 @@ const Login = () => {
       }
 
       toast.success('Login successful!');
-      
+
       // Normalize user object for backward compatibility with other components
       const normalizedRole = normalizeRole(matchedUserRow[11]);
       const normalizedUser = {
@@ -242,7 +243,7 @@ const Login = () => {
             </div>
           </form>
 
-        
+
         </div>
       </div>
     </div>
