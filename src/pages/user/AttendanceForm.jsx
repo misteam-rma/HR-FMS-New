@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, MapPin, Clock, CheckCircle2, AlertCircle, Loader2, Send, 
   XCircle, RotateCw, MapPinned, CheckCircle 
@@ -34,7 +34,7 @@ const AttendanceForm = () => {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
       const result = await response.json();
       if (result.success) {
@@ -184,7 +184,7 @@ const AttendanceForm = () => {
 
       for (const folderId of folderIdsToTry) {
         try {
-          const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+          const uploadRes = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: new URLSearchParams({
@@ -232,7 +232,7 @@ const AttendanceForm = () => {
       ];
 
       // 3. Submit to Sheet
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Filter, Search, Clock, CheckCircle, X, User, Briefcase, Calendar, AlertCircle, ArrowRight, Layout, History, ChevronDown, Check, MoreHorizontal, LogOut, Share2, Download, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -50,7 +50,7 @@ const Leaving = () => {
   // Helper: get current server timestamp
   const fetchServerTimestamp = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?action=ping`);
+      const res = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?action=ping`);
       const data = await res.json();
       if (data.success && data.serverTime) {
         let serverTimeStr = data.serverTime;
@@ -71,7 +71,7 @@ const Leaving = () => {
   const fetchJoiningData = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`);
       const text = await response.text();
       let result;
       try {
@@ -185,7 +185,7 @@ setHistoryData(prev => {
 
   const fetchLeavingData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`);
       const text = await response.text();
       let result;
       try {
@@ -381,7 +381,7 @@ setHistoryData(prev => {
       console.log("Submitting Exit RowData:", rowData);
 
       // 1. Insert into LEAVING sheet using rowData format
-      const leavingResponse = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const leavingResponse = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({

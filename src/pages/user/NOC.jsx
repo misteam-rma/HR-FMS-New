@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { FileText, Plus, X, CheckCircle, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -34,7 +34,7 @@ const NOC = () => {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
       const result = await response.json();
       if (result.success) {
@@ -56,7 +56,7 @@ const NOC = () => {
   const fetchNocData = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=108 NOC&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=108 NOC&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -169,7 +169,7 @@ const NOC = () => {
 
     try {
       // Get next serial number
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=108 NOC&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=108 NOC&action=fetch`);
       const result = await fetchResponse.json();
       const existingData = result.data || result;
 
@@ -218,7 +218,7 @@ const NOC = () => {
         "",                     // M - Status (blank)
       ];
 
-      const insertRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const insertRes = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ action: "insert", sheetName: "108 NOC", rowData: JSON.stringify(rowData) })
@@ -247,7 +247,7 @@ const NOC = () => {
     const loadingToast = toast.loading(`Submitting ${approvalStatus}...`);
 
     try {
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=108 NOC&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=108 NOC&action=fetch`);
       const result = await fetchResponse.json();
       const allData = result.data || result;
       const rowIndex = selectedNoc.rowIndex;
@@ -266,7 +266,7 @@ const NOC = () => {
       currentRow[15] = approvalStatus;  // P - Status
       currentRow[16] = actualTimestamp; // Q - Status Date
 
-      const res = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ action: "update", sheetName: "108 NOC", rowIndex, rowData: JSON.stringify(currentRow) })

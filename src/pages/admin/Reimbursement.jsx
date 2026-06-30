@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import {
   Search, Calendar, Filter, Clock, CheckCircle2,
   XCircle, ChevronRight, History, Download, MapPin,
@@ -57,7 +57,7 @@ const Reimbursement = () => {
 
   const fetchArticleList = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Master&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -122,7 +122,7 @@ const Reimbursement = () => {
   const fetchReimbursementLogs = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Reimbursment&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Reimbursment&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -216,7 +216,7 @@ const Reimbursement = () => {
     setIsSubmitting(true);
     try {
       // 1. Fetch current Reimbursement sheet to generate Serial No
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Reimbursment&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Reimbursment&action=fetch`);
       const fetchResult = await fetchResponse.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
 
@@ -271,7 +271,7 @@ const Reimbursement = () => {
           ''                      // T: Remarks
         ];
 
-        const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({

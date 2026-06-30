@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Search, X, Plus, Calendar, User, Briefcase, CheckCircle2, 
   XCircle, Clock, Filter, ChevronRight, FileText, Download, 
@@ -50,7 +50,7 @@ const LeaveManagement = () => {
 
   const fetchApproverList = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Master&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
       if (Array.isArray(rawData) && rawData.length > 0) {
@@ -70,7 +70,7 @@ const LeaveManagement = () => {
   const fetchLeaveData = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`);
       const result = await response.json();
       if (result.success && result.data) {
         const dataRows = result.data.slice(6).filter(row => row[2] && row[2].toString().trim() !== "");
@@ -111,7 +111,7 @@ const LeaveManagement = () => {
 
   const fetchEmployeeList = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=USER&action=fetch`);
       const result = await response.json();
       console.log("User Data Fetched:", result);
       const rawData = result.data || result;
@@ -191,7 +191,7 @@ const LeaveManagement = () => {
         formData.remarks             // P: Remarks
       ];
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -258,7 +258,7 @@ const LeaveManagement = () => {
         selectedLeave.remarks        // P: Keep existing remarks
       ];
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({

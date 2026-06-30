@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { 
   Search, Users, Calendar, Filter, Clock, CheckCircle2, 
   XCircle, AlertCircle, ChevronRight, FileText, ChevronDown, 
@@ -22,7 +22,7 @@ const Attendance = () => {
   const fetchAttendanceData = async () => {
     setTableLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Monthly Report&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Monthly Report&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 

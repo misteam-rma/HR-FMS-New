@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { IndianRupee, TrendingUp, Download, Eye, Banknote, CalendarDays, Wallet } from 'lucide-react';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -31,7 +31,7 @@ const MySalary = () => {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Salary&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Salary&action=fetch`
       );
 
       if (!response.ok) {

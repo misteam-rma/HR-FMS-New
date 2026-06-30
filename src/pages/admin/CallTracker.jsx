@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Clock, CheckCircle, X, Upload, History, ChevronDown, Check, Calendar, Filter, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -37,10 +37,10 @@ const CallTracker = () => {
     try {
       const [enquiryResponse, followUpResponse] = await Promise.all([
         fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`
         ),
         fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Follow - Up&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Follow - Up&action=fetch`
         ),
       ]);
 
@@ -123,7 +123,7 @@ const CallTracker = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Follow - Up&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Follow - Up&action=fetch`
       );
 
       if (!response.ok) {
@@ -195,7 +195,7 @@ const CallTracker = () => {
 
 
   const postToSheet = async (rowData) => {
-    const URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+    const URL = "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec";
 
     try {
       console.log('Attempting to post:', {
@@ -241,7 +241,7 @@ const CallTracker = () => {
   };
 
   const updateEnquirySheet = async (enquiryNo) => {
-    const URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+    const URL = "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec";
 
     try {
       console.log('Attempting to update ENQUIRY sheet for:', enquiryNo);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Filter, Search, Clock, CheckCircle, X, Calendar, ChevronDown, Check, ChevronUp, Upload } from 'lucide-react';
 import useDataStore from '../../store/dataStore';
 import toast from 'react-hot-toast';
@@ -72,7 +72,7 @@ const AfterJoiningWork = () => {
   // Helper: get current server timestamp
   const fetchServerTimestamp = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?action=ping`);
+      const res = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?action=ping`);
       const data = await res.json();
       if (data.success && data.serverTime) {
         let serverTimeStr = data.serverTime;
@@ -97,7 +97,7 @@ const AfterJoiningWork = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!response.ok) {
@@ -201,7 +201,7 @@ const AfterJoiningWork = () => {
 
       try {
         const assetsResponse = await fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Assets&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Assets&action=fetch`
         );
         if (assetsResponse.ok) {
           const assetsResult = await assetsResponse.json();
@@ -268,7 +268,7 @@ const AfterJoiningWork = () => {
   const fetchAssetsData = async (employeeId) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Assets&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Assets&action=fetch`
       );
 
       if (!response.ok) {
@@ -363,7 +363,7 @@ const AfterJoiningWork = () => {
           console.log(`Uploading file with folderId: ${folderId} (Attempt ${attempts + 1})`);
           
           const response = await fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {
@@ -579,7 +579,7 @@ const AfterJoiningWork = () => {
       if (existingData) {
         // Update existing record - find the row and update it
         const fetchResponse = await fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Assets&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Assets&action=fetch`
         );
         const result = await fetchResponse.json();
         const data = result.data || result;
@@ -592,7 +592,7 @@ const AfterJoiningWork = () => {
         if (rowIndex !== -1) {
           // Update existing row
           const response = await fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {
@@ -612,7 +612,7 @@ const AfterJoiningWork = () => {
 
       // Insert new record
       const response = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: {
@@ -642,7 +642,7 @@ const pad = (num) => String(num).padStart(2, '0');
 
 const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
       // Fetch current USER sheet to determine next Serial No
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=USER&action=fetch`);
       const result = await fetchResponse.json();
       const existingData = result.success ? (result.data || result) : [];
       
@@ -682,7 +682,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
       ];
 
       await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -830,7 +830,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
 
       // Continue with existing logic for updating JOINING sheet
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
       if (!fullDataResponse.ok) {
         throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
@@ -898,7 +898,7 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
         if (colIdx === -1 || colIdx === 33) return; // Column AH (index 33) is restricted from submission
         updatePromises.push(
           fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {

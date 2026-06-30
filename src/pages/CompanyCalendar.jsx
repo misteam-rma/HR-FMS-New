@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -41,7 +41,7 @@ const CompanyCalendar = () => {
       formData.append('sheetName', 'CompanyCalendar');
       formData.append('rowData', JSON.stringify(rowData));
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         body: formData
       });
@@ -74,10 +74,10 @@ const CompanyCalendar = () => {
     setLoading(true);
     try {
       const [calendarRes, enquiryRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=CompanyCalendar&action=fetch`)
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=CompanyCalendar&action=fetch`)
           .then(res => res.ok ? res.json() : { success: false, data: [] })
           .catch(() => ({ success: false, data: [] })),
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`)
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`)
           .then(res => res.ok ? res.json() : { success: false, data: [] })
           .catch(() => ({ success: false, data: [] }))
       ]);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Filter, Search, Clock, CheckCircle, ImageIcon, User, Briefcase, MapPin, Phone, Layout, History, ChevronDown, Check, Calendar, ArrowRight, ClipboardCheck, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -29,7 +29,7 @@ const Employee = () => {
     setTableLoading(true);
     try {
       // 1. Fetch LEAVING data first to use for lookup
-      const leavingResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`);
+      const leavingResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`);
       const leavingResult = await leavingResponse.json();
       const leavingRaw = leavingResult.success ? (leavingResult.data || leavingResult) : [];
       const leavingMap = {};
@@ -47,7 +47,7 @@ const Employee = () => {
       }
 
       // 2. Fetch JOINING data
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`);
       const result = await response.json();
       if (result.success) {
         const rawData = result.data || result;
@@ -103,7 +103,7 @@ const Employee = () => {
 
   const fetchLeavingData = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`);
       const result = await response.json();
       if (result.success) {
         const rawData = result.data || result;

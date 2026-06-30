@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Clock, CheckCircle, X, Upload, Share, FileText, Mail, Calendar, Filter, ChevronDown, Check, History } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -32,7 +32,7 @@ const Joining = () => {
   });
 
   const GOOGLE_DRIVE_FOLDER_ID = import.meta.env.VITE_GOOGLE_DRIVE_ENQUIRY_FOLDER_ID;
-  const API_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+  const API_URL = "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec";
 
   const [joiningFormData, setJoiningFormData] = useState({
     nameAsPerAadhar: '',
@@ -100,10 +100,10 @@ const Joining = () => {
     setError(null);
     try {
       const [enquiryResponse, followUpResponse, joiningHistoryResponse, masterResponse] = await Promise.all([
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`),
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Follow - Up&action=fetch`),
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`),
-        fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Follow - Up&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Master&action=fetch`),
       ]);
       const [enquiryResult, followUpResult, joiningHistoryResult, masterResult] = await Promise.all([
         enquiryResponse.json(),

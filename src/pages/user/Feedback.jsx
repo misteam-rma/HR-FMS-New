@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Plus, FileUp, X, CheckCircle, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -46,7 +46,7 @@ const Feedback = () => {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
       const result = await response.json();
       if (result.success) {
@@ -70,7 +70,7 @@ const Feedback = () => {
     setTableLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Feedback&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Feedback&action=fetch`
       );
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -221,7 +221,7 @@ const Feedback = () => {
         const base64Data = await fileToBase64(formData.screenshot);
         const fileName = `Feedback_${Date.now()}_${formData.screenshot.name.replace(/\s+/g, '_')}`;
 
-        const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+        const uploadRes = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({
@@ -244,7 +244,7 @@ const Feedback = () => {
       toast.loading('Saving details...', { id: loadingToast });
 
       // 2. Fetch existing data to get Serial Number
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Feedback&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Feedback&action=fetch`);
       const result = await fetchResponse.json();
       const existingData = result.success ? (result.data || result) : [];
 
@@ -295,7 +295,7 @@ const Feedback = () => {
       ];
 
       // 4. Save to sheet
-      const insertRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const insertRes = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -348,7 +348,7 @@ const Feedback = () => {
 
     try {
       // 1. Fetch the full current row data to ensure we don't overwrite other columns
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Feedback&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Feedback&action=fetch`);
       const result = await fetchResponse.json();
       const allData = result.data || result;
 
@@ -371,7 +371,7 @@ const Feedback = () => {
       currentRow[12] = approvalStatus;   // Column M
 
       // 3. Send update request using rowIndex
-      const res = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({

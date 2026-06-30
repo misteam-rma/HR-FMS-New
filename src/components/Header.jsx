@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Search, User, Menu, Settings, Scan, X, QrCode, Download } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { isAdminUser } from '../utils/auth';
@@ -26,10 +26,10 @@ const Header = ({ onMenuClick, user }) => {
     const fetchNotifications = async () => {
       try {
         const [calendarRes, enquiryRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Calendar&action=fetch`)
+          fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Calendar&action=fetch`)
             .then(res => res.ok ? res.json() : { success: false, data: [] })
             .catch(() => ({ success: false, data: [] })),
-          fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`)
+          fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`)
             .then(res => res.ok ? res.json() : { success: false, data: [] })
             .catch(() => ({ success: false, data: [] }))
         ]);

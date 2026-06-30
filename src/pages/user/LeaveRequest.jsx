@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Plus, Filter, X, Clock, Search, RotateCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -34,7 +34,7 @@ const LeaveRequest = () => {
   const fetchHodNames = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Master&action=fetch`
       );
 
       if (!response.ok) {
@@ -70,7 +70,7 @@ const LeaveRequest = () => {
   const fetchEmployeeData = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!response.ok) {
@@ -117,7 +117,7 @@ const LeaveRequest = () => {
   const fetchEmployees = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!response.ok) {
@@ -290,7 +290,7 @@ const LeaveRequest = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`
       );
 
       if (!response.ok) {
@@ -401,7 +401,7 @@ const LeaveRequest = () => {
       const leaveDays = calculateDays(formData.fromDate, formData.toDate);
 
       // 1. Fetch current data to generate Serial No
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`);
       const fetchResult = await fetchResponse.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
 
@@ -438,7 +438,7 @@ const LeaveRequest = () => {
       ];
 
       const response = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           body: new URLSearchParams({

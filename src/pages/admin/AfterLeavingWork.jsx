@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Clock, CheckCircle, X, User, Briefcase, Calendar, AlertCircle, ArrowRight, Layout, History, ChevronDown, Check, MoreHorizontal, LogOut, Share2, Download, Phone, ClipboardCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -38,7 +38,7 @@ const AfterLeavingWork = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`
       );
 
       if (!response.ok) {
@@ -125,7 +125,7 @@ const AfterLeavingWork = () => {
 
     try {
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`
       );
 
       if (!fullDataResponse.ok) {
@@ -237,7 +237,7 @@ const AfterLeavingWork = () => {
     try {
       // 1. First fetch the current data
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=LEAVING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=LEAVING&action=fetch`
       );
       if (!fullDataResponse.ok) {
         throw new Error(`HTTP error! status: ${fullDataResponse.status}`);
@@ -290,7 +290,7 @@ const AfterLeavingWork = () => {
       if (allConditionsMet) {
         updatePromises.push(
           fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {
@@ -312,7 +312,7 @@ const AfterLeavingWork = () => {
       if (formData.finalReleaseDate) {
         updatePromises.push(
           fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {
@@ -344,7 +344,7 @@ const AfterLeavingWork = () => {
       fields.forEach((field) => {
         updatePromises.push(
           fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {

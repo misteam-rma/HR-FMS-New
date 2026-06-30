@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { HistoryIcon, Plus, X, Search, Filter, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import useDataStore from '../../store/dataStore';
 import toast from 'react-hot-toast';
@@ -94,7 +94,7 @@ This indent requires your attention.
       setSubmitting(true);
       const timestamp = getCurrentTimestamp();
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         body: new URLSearchParams({
           action: 'shareViaEmail',
@@ -138,7 +138,7 @@ This indent requires your attention.
   const fetchMasterData = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Master&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Master&action=fetch`
       );
 
       const result = await response.json();
@@ -224,7 +224,7 @@ This indent requires your attention.
   const fetchIndentDataFromRow7 = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=INDENT&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`
       );
 
       const result = await response.json();
@@ -296,7 +296,7 @@ This indent requires your attention.
   const fetchLastIndentNumber = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=INDENT&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`
       );
 
       const result = await response.json();
@@ -464,7 +464,7 @@ This indent requires your attention.
         formData.socialSite === 'Yes' ? formData.socialSiteTypes.join(', ') : '', // L (11): Social Site Types
       ];
 
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         body: new URLSearchParams({
           sheetName: 'INDENT',

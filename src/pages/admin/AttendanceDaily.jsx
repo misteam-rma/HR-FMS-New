@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   Search, Users, Calendar, Filter, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, FileText, ChevronDown,
@@ -133,7 +133,7 @@ const AttendanceDaily = () => {
 
   const fetchUserList = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=USER&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -192,7 +192,7 @@ const AttendanceDaily = () => {
     if (!modalFormData.code) return toast.error("Please enter an employee code");
     setIsLookingUp(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=USER&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
 
@@ -232,7 +232,7 @@ const AttendanceDaily = () => {
 
     try {
       // 1. Fetch current Attendance sheet for validation and Serial No calculation
-      const fetchResponse = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const fetchResponse = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Attendance&action=fetch`);
       const fetchResult = await fetchResponse.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
 
@@ -282,7 +282,7 @@ const AttendanceDaily = () => {
         ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID
         : import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_OUT_FOLDER_ID;
 
-      const uploadResponse = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const uploadResponse = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -321,7 +321,7 @@ const AttendanceDaily = () => {
       const locationLink = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
 
       // 3. Submitting to Attendance sheet
-      const response = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -365,7 +365,7 @@ const AttendanceDaily = () => {
     setTableLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Attendance&action=fetch`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const result = await response.json();

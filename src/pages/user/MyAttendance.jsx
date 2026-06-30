@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Clock, CheckCircle, XCircle, MapPin, Plus, X, RefreshCcw, FileText,
   Camera, RotateCw, MapPinned, CheckCircle2
@@ -56,7 +56,7 @@ const MyAttendance = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Attendance&action=fetch`
       );
 
       if (!response.ok) {
@@ -188,7 +188,7 @@ const MyAttendance = () => {
 
   const fetchUserList = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=USER&action=fetch`);
+      const response = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=USER&action=fetch`);
       const result = await response.json();
       const rawData = result.data || result;
       if (Array.isArray(rawData) && rawData.length > 0) {
@@ -300,7 +300,7 @@ const MyAttendance = () => {
 
     try {
       // 1. Fetch fresh data for validation and serial calculation
-      const fetchRes = await fetch(`${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Attendance&action=fetch`);
+      const fetchRes = await fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Attendance&action=fetch`);
       const fetchResult = await fetchRes.json();
       const existingData = fetchResult.success ? (fetchResult.data || fetchResult) : [];
 
@@ -358,7 +358,7 @@ const MyAttendance = () => {
         ? import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_IN_FOLDER_ID 
         : import.meta.env.VITE_GOOGLE_DRIVE_ATTENDANCE_OUT_FOLDER_ID;
 
-      const uploadRes = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const uploadRes = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({
@@ -407,7 +407,7 @@ const MyAttendance = () => {
         now.toLocaleString('en-US', { month: 'long' })
       ];
 
-      const res = await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+      const res = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ action: "insert", sheetName: "Attendance", rowData: JSON.stringify(rowData) })

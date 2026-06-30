@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Clock, CheckCircle2, XCircle, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -215,7 +215,7 @@ const LeaveApproval = () => {
 
     try {
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`
       );
 
       if (!fullDataResponse.ok) {
@@ -262,7 +262,7 @@ const LeaveApproval = () => {
       };
 
       const timestampResponse = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: {
@@ -286,7 +286,7 @@ const LeaveApproval = () => {
         };
 
         const startDateResponse = await fetch(
-          import.meta.env.VITE_APPS_SCRIPT_URL,
+          "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
           {
             method: "POST",
             headers: {
@@ -311,7 +311,7 @@ const LeaveApproval = () => {
         };
 
         const endDateResponse = await fetch(
-          import.meta.env.VITE_APPS_SCRIPT_URL,
+          "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
           {
             method: "POST",
             headers: {
@@ -335,7 +335,7 @@ const LeaveApproval = () => {
       };
 
       const approvalResponse = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: {
@@ -374,7 +374,7 @@ const LeaveApproval = () => {
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`
       );
 
       if (!response.ok) {

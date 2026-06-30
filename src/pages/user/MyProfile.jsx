@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   User,
@@ -77,7 +77,7 @@ const MyProfile = () => {
       for (const folderId of folderIdsToTry) {
         try {
           const uploadResponse = await fetch(
-            import.meta.env.VITE_APPS_SCRIPT_URL,
+            "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
             {
               method: "POST",
               headers: {
@@ -109,7 +109,7 @@ const MyProfile = () => {
 
       // Find the row with matching Joining No and update Column H
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!fullDataResponse.ok) {
@@ -148,7 +148,7 @@ const MyProfile = () => {
 
       // 2. Find the row in ENQUIRY sheet and update Column Q (Index 16, Column 17)
       const enquiryResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`
       );
 
       if (!enquiryResponse.ok) {
@@ -217,7 +217,7 @@ const MyProfile = () => {
 
       // Update the ENQUIRY sheet with the new image URL in Column Q (Column 17)
       const updateResponse = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: {
@@ -274,7 +274,7 @@ const MyProfile = () => {
 
       // Fetch data from the Leave Management sheet
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Leave Management&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Leave Management&action=fetch`
       );
 
       if (!response.ok) {
@@ -380,7 +380,7 @@ const MyProfile = () => {
   const fetchGatePassData = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=Gate Pass&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=Gate Pass&action=fetch`
       );
 
       if (!response.ok) {
@@ -452,7 +452,7 @@ const MyProfile = () => {
       const userName = currentUser.Name;
 
       const response = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!response.ok) {
@@ -560,7 +560,7 @@ const MyProfile = () => {
         // Fetch profile image from ENQUIRY sheet
         try {
           const enquiryResponse = await fetch(
-            `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`
+            `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`
           );
 
           if (enquiryResponse.ok) {
@@ -665,7 +665,7 @@ const MyProfile = () => {
 
       // 1. Fetch current data from JOINING sheet
       const fullDataResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=JOINING&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`
       );
 
       if (!fullDataResponse.ok) {
@@ -776,7 +776,7 @@ const MyProfile = () => {
 
       // 8. Send update request
       const response = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: "POST",
           headers: {

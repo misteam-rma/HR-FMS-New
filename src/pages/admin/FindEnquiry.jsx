@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Search, Clock, Check, X, Upload, Share, QrCode, Download, ChevronDown, ChevronUp, Plus, Filter, Calendar, List, History } from 'lucide-react';
 import useDataStore from '../../store/dataStore';
 import toast from 'react-hot-toast';
@@ -70,7 +70,7 @@ const FindEnquiry = () => {
     try {
       // Fetch INDENT data
       const indentResponse = await fetch(
-        `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=INDENT&action=fetch`
+        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`
       );
 
       if (!indentResponse.ok) {
@@ -121,7 +121,7 @@ const FindEnquiry = () => {
 
         // Fetch ENQUIRY data for history tab
         const enquiryResponse = await fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=ENQUIRY&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`
         );
 
         const enquiryResult = await enquiryResponse.json();
@@ -245,7 +245,7 @@ const FindEnquiry = () => {
       const base64Data = await fileToBase64(file);
 
       const response = await fetch(
-        import.meta.env.VITE_APPS_SCRIPT_URL,
+        "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
         {
           method: 'POST',
           headers: {
@@ -384,7 +384,7 @@ const FindEnquiry = () => {
         imageUrl: selectedItem.candidatePhoto || ''
       }];
 
-      const URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+      const URL = "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec";
 
       const params = new URLSearchParams();
       params.append('action', 'shareViaEmail');
@@ -505,7 +505,7 @@ const FindEnquiry = () => {
         console.log("Submitting to ENQUIRY sheet:", rowData);
 
         const enquiryResponse = await fetch(
-          import.meta.env.VITE_APPS_SCRIPT_URL,
+          "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec",
           {
             method: "POST",
             headers: {
@@ -534,7 +534,7 @@ const FindEnquiry = () => {
 
         // Fetch current INDENT data for update
         const indentFetchResponse = await fetch(
-          `${import.meta.env.VITE_APPS_SCRIPT_URL}?sheet=INDENT&action=fetch`
+          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`
         );
 
         const latestIndentResult = await indentFetchResponse.json();
@@ -555,7 +555,7 @@ const FindEnquiry = () => {
             console.log("Updating INDENT actual date on row:", rowIndex);
 
             // Update Actual 2 (Column N = index 14 in 1-based)
-            await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+            await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({
@@ -568,7 +568,7 @@ const FindEnquiry = () => {
             });
 
             // Update Status (Column P = index 16 in 1-based)
-            await fetch(import.meta.env.VITE_APPS_SCRIPT_URL, {
+            await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: new URLSearchParams({

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Camera,
@@ -89,7 +89,7 @@ const VisitorEntry = ({ isModal = false, onClose, onRefresh, isPublic = false })
   const fetchPersonToMeetOptions = async () => {
     setIsLoadingOptions(true);
     try {
-      const SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
+      const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec";
       const response = await fetch(`${SCRIPT_URL}?action=fetch&sheet=Master`);
       const result = await response.json();
 
