@@ -69,7 +69,7 @@ function App() {
             <Route path="leave-request" element={<ProtectedRoute allowedRoles={['user']}><LeaveRequest /></ProtectedRoute>} />
             <Route path="gate-pass" element={<ProtectedRoute allowedRoles={['admin']}><GatePass /></ProtectedRoute>} />
             <Route path="gate-pass-request" element={<ProtectedRoute allowedRoles={['user']}><GatePassRequest /></ProtectedRoute>} />
-            <Route path="visitor-approval" element={<ProtectedRoute allowedRoles={['admin', 'user']}><VisitorApproval /></ProtectedRoute>} />
+            <Route path="visitor-approval" element={<ProtectedRoute allowedRoles={['admin']}><VisitorApproval /></ProtectedRoute>} />
             <Route path="close-gate-pass" element={<ProtectedRoute allowedRoles={['admin']}><CloseGatePass /></ProtectedRoute>} />
             <Route path="noc" element={<NOC />} />
             <Route path="feedback" element={<Feedback />} />

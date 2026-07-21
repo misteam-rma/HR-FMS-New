@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -114,7 +114,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     // { path: '/gate-pass-request', icon: Bell, label: 'Gate Pass' },
     { path: '/noc', icon: FileText, label: '108 NOC' },
     { path: '/feedback', icon: MessageSquare, label: 'Feedback' },
-    { path: '/visitor-approval', icon: CheckCircle2, label: 'Visitor Requests' },
     { path: '/company-calendar', icon: Calendar, label: 'Calendar' },
     { path: '/license', icon: Copyright, label: 'License' },
   ];
