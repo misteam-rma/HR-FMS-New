@@ -187,7 +187,7 @@ const FindEnquiry = () => {
               socialSiteTypes: getVal('social site types', 11) || row[11] || '',
               status: statusRaw,
               plannedDate: row[12] || '',
-              actual: row[13] || '',
+              actual: (row[13] && !row[13].toString().includes('1970')) ? row[13] : '',
               isHistory: isHistory,
               historyReason: historyReason,
             };
@@ -593,6 +593,8 @@ const FindEnquiry = () => {
             console.log("Updating INDENT actual date on row:", rowIndex);
 
             // Update Actual 2 (Column N = index 14 in 1-based)
+            // Apps Script expects MM/DD/YYYY hh:mm:ss to parse valid Date without returning 01/01/1970
+            const actual2DateForSheet = `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
             await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -601,7 +603,7 @@ const FindEnquiry = () => {
                 action: "updateCell",
                 rowIndex: rowIndex.toString(),
                 columnIndex: "14", 
-                value: formattedTimestamp,
+                value: actual2DateForSheet,
               }),
             });
 
