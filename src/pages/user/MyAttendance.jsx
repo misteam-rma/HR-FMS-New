@@ -1,10 +1,11 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Calendar, Clock, CheckCircle, XCircle, MapPin, Plus, X, RefreshCcw, FileText,
   Camera, RotateCw, MapPinned, CheckCircle2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import { fetchMasterCompanies, evaluateLocationMatch } from '../../utils/locationMatcher';
 
 const MyAttendance = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
@@ -389,6 +390,14 @@ const MyAttendance = () => {
       // 4. Insert Row
       const timestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
+      const masterCompanies = await fetchMasterCompanies();
+      const locationMatchStatus = evaluateLocationMatch(
+        locationData.latitude,
+        locationData.longitude,
+        formData.department,
+        masterCompanies
+      );
+
       const rowData = [
         timestamp,
         nextSerial,
@@ -404,7 +413,8 @@ const MyAttendance = () => {
         dateStr,
         timeStr,
         `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`,
-        now.toLocaleString('en-US', { month: 'long' })
+        now.toLocaleString('en-US', { month: 'long' }),
+        locationMatchStatus
       ];
 
       const res = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {

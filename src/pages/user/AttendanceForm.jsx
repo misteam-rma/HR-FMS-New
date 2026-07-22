@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, MapPin, Clock, CheckCircle2, AlertCircle, Loader2, Send, 
   XCircle, RotateCw, MapPinned, CheckCircle 
@@ -6,6 +6,7 @@ import {
 import LoadingSpinner from '../../components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { fetchMasterCompanies, evaluateLocationMatch } from '../../utils/locationMatcher';
 
 const AttendanceForm = () => {
   const navigate = useNavigate();
@@ -210,7 +211,14 @@ const AttendanceForm = () => {
       const now = new Date();
       const date = now.toLocaleDateString('en-GB'); 
       const time = now.toLocaleTimeString('en-US', { hour12: false });
-      const bufferTime = new Date(now.getTime() + 5 * 60000).toLocaleTimeString('en-US', { hour12: false });
+
+      const masterCompanies = await fetchMasterCompanies();
+      const locationMatchStatus = evaluateLocationMatch(
+        location.lat,
+        location.lng,
+        formData.department,
+        masterCompanies
+      );
 
       const rowData = [
         isAdmin ? 'Admin' : 'Employee',
@@ -228,7 +236,7 @@ const AttendanceForm = () => {
         location.lat.toString(),
         location.lng.toString(),
         now.toLocaleString('en-US', { month: 'long' }), // O
-        bufferTime
+        locationMatchStatus
       ];
 
       // 3. Submit to Sheet

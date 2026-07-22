@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Search, Users, Calendar, Filter, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronRight, FileText, ChevronDown,
@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import toast from "react-hot-toast";
+import { fetchMasterCompanies, evaluateLocationMatch } from "../../utils/locationMatcher";
 
 const AttendanceDaily = () => {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -320,6 +321,15 @@ const AttendanceDaily = () => {
       const timestamp = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()} ${now.getHours()}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
       const locationLink = `https://www.google.com/maps?q=${locationData.latitude},${locationData.longitude}`;
 
+      // Fetch Master company locations to evaluate location matching (200m radius)
+      const masterCompanies = await fetchMasterCompanies();
+      const locationMatchStatus = evaluateLocationMatch(
+        locationData.latitude,
+        locationData.longitude,
+        modalFormData.department,
+        masterCompanies
+      );
+
       // 3. Submitting to Attendance sheet
       const response = await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
         method: 'POST',
@@ -342,7 +352,8 @@ const AttendanceDaily = () => {
             dateStr,                            // L: Date
             timeStr,                            // M: Time
             locationLink,                       // N: Location Link
-            now.toLocaleString('en-US', { month: 'long' }) // O: Month name only
+            now.toLocaleString('en-US', { month: 'long' }), // O: Month name only
+            locationMatchStatus                 // P: Location Match Status
           ])
         })
       });
@@ -385,44 +396,54 @@ const AttendanceDaily = () => {
       const headers = rawData[headerRowIndex].map(h => h?.toString().trim() || '');
       const dataRows = rawData.slice(headerRowIndex + 1);
 
-        // Group data by Employee ID and Date
-        const groups = {};
-        dataRows.forEach((row, index) => {
-          const empId = (row[2] || '').toString().trim();
-          const date = (row[11] || '').toString().trim();
-          if (!empId || !date) return;
+      const masterCompanies = await fetchMasterCompanies();
 
-          const key = `${empId}_${date}`;
-          const rawStatus = (row[6] || '').toString().trim().toUpperCase();
-          const punchTime = (row[12] || '').toString().trim();
-          const outTimeFromP = (row[15] || '').toString().trim(); // Column P
+      // Group data by Employee ID and Date
+      const groups = {};
+      dataRows.forEach((row, index) => {
+        const empId = (row[2] || '').toString().trim();
+        const date = (row[11] || '').toString().trim();
+        if (!empId || !date) return;
 
-          if (!groups[key]) {
-            groups[key] = {
-              id: `group-${empId}-${date}`,
-              name: (row[4] || 'Unknown').toString().trim(),
-              empId: empId,
-              date: date,
-              inTime: '--:--',
-              outTime: '--:--',
-              workingHours: '0',
-              lateMins: '0',
-              status: 'Present',
-              location: (row[10] || 'Location NA').toString().trim(),
-              department: (row[5] || '').toString().trim()
-            };
+        const key = `${empId}_${date}`;
+        const rawStatus = (row[6] || '').toString().trim().toUpperCase();
+        const punchTime = (row[12] || '').toString().trim();
+        const valP = (row[15] || '').toString().trim();
+        const outTimeFromP = (valP.includes(':') && !valP.toLowerCase().includes('location')) ? valP : '';
+        const storedLocStatus = (valP === 'Location Matched' || valP === 'Location Not Matched')
+          ? valP
+          : (row[16] || '').toString().trim();
+        const computedLocStatus = (storedLocStatus === 'Location Matched' || storedLocStatus === 'Location Not Matched')
+          ? storedLocStatus
+          : evaluateLocationMatch(row[8], row[9], row[5], masterCompanies);
+
+        if (!groups[key]) {
+          groups[key] = {
+            id: `group-${empId}-${date}`,
+            name: (row[4] || 'Unknown').toString().trim(),
+            empId: empId,
+            date: date,
+            inTime: '--:--',
+            outTime: '--:--',
+            workingHours: '0',
+            lateMins: '0',
+            status: 'Present',
+            location: (row[10] || 'Location NA').toString().trim(),
+            department: (row[5] || '').toString().trim(),
+            locationStatus: computedLocStatus
+          };
+        }
+
+        if (rawStatus.includes('IN')) {
+          groups[key].inTime = punchTime || '--:--';
+          // If Column P has an out time, use it
+          if (outTimeFromP && outTimeFromP !== '--:--') {
+            groups[key].outTime = outTimeFromP;
           }
-
-          if (rawStatus.includes('IN')) {
-            groups[key].inTime = punchTime || '--:--';
-            // If Column P has an out time, use it
-            if (outTimeFromP && outTimeFromP !== '--:--') {
-              groups[key].outTime = outTimeFromP;
-            }
-          } else if (rawStatus.includes('OUT')) {
-            groups[key].outTime = punchTime || '--:--';
-          }
-        });
+        } else if (rawStatus.includes('OUT')) {
+          groups[key].outTime = punchTime || '--:--';
+        }
+      });
 
         // Convert groups object to array and calculate working hours
         const processedData = Object.values(groups).map(group => {
@@ -636,6 +657,7 @@ const AttendanceDaily = () => {
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Net Depth</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Latency</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Location Match</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
@@ -660,6 +682,11 @@ const AttendanceDaily = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.status === 'Present' ? 'bg-green-100 text-green-700' : (item.status === 'Holiday' ? 'bg-indigo-100 text-indigo-700' : 'bg-red-100 text-red-700')}`}>
                               {item.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium ${item.locationStatus === 'Location Matched' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}`}>
+                              {item.locationStatus || 'Location Not Matched'}
                             </span>
                           </td>
                         </tr>
@@ -703,11 +730,16 @@ const AttendanceDaily = () => {
                           <p className="text-[13px] font-black text-slate-800 uppercase tracking-tight">{item.name}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">#{item.empId}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' :
-                            (item.status === 'Holiday' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600')
-                          }`}>
-                          {item.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${item.status === 'Present' ? 'bg-emerald-50 text-emerald-600' :
+                              (item.status === 'Holiday' ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600')
+                            }`}>
+                            {item.status}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${item.locationStatus === 'Location Matched' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {item.locationStatus || 'Location Not Matched'}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
