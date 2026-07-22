@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 
 // Professional Dummy Monthly History (Jan - Apr 2024)
 const Attendance = () => {
@@ -90,6 +91,28 @@ const Attendance = () => {
     return matchesSearch && matchesName && matchesMonth;
   });
 
+  const handleExport = () => {
+    if (filteredData.length === 0) {
+      toast.error("No records to export");
+      return;
+    }
+
+    const exportRows = filteredData.map(item => ({
+      "Employee Name": item.name,
+      "Employee ID": item.empId,
+      "Month": `${item.month} ${item.year}`,
+      "Net Present": item.punchDays,
+      "Total Absents": item.absents,
+      "Status": item.status
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Attendance");
+    XLSX.writeFile(workbook, `Monthly_Attendance_${filterMonth || "All"}.xlsx`);
+    toast.success("Attendance exported successfully!");
+  };
+
   const departments = [...new Set(attendanceData.map(d => d.department))].sort();
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -173,6 +196,15 @@ const Attendance = () => {
                   <option key={m} value={m}>{m.toUpperCase()}</option>
                 ))}
              </select>
+
+             {/* Export Button */}
+             <button
+               onClick={handleExport}
+               className="flex items-center justify-center gap-2 h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-95"
+             >
+               <Download size={12} />
+               <span>Export</span>
+             </button>
           </div>
         </div>
       </div>

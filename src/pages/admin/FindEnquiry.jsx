@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Clock, Check, X, Upload, Share, QrCode, Download, ChevronDown, ChevronUp, Plus, Filter, Calendar, List, History } from 'lucide-react';
 import useDataStore from '../../store/dataStore';
 import toast from 'react-hot-toast';
@@ -68,106 +68,144 @@ const FindEnquiry = () => {
     setError(null);
 
     try {
-      // Fetch INDENT data
-      const indentResponse = await fetch(
-        `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`
-      );
+      // Fetch INDENT, ENQUIRY, and JOINING data in parallel
+      const [indentResponse, enquiryResponse, joiningResponse] = await Promise.all([
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=INDENT&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`),
+        fetch(`${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=JOINING&action=fetch`).catch(() => null)
+      ]);
 
       if (!indentResponse.ok) {
         throw new Error(`HTTP error! status: ${indentResponse.status}`);
       }
 
       const indentResult = await indentResponse.json();
+      const enquiryResult = enquiryResponse.ok ? await enquiryResponse.json() : { success: false, data: [] };
+      const joiningResult = joiningResponse && joiningResponse.ok ? await joiningResponse.json() : { success: false, data: [] };
+
+      // Build Joined Candidates Map per Indent Number
+      const joinedCandidateEnqSet = new Set();
+      if (joiningResult.success && joiningResult.data && joiningResult.data.length > 1) {
+        const jRows = joiningResult.data.slice(1);
+        jRows.forEach(row => {
+          const enqNo = (row[2] || row[1] || '').toString().trim(); // Candidate Enquiry Number
+          if (enqNo) joinedCandidateEnqSet.add(enqNo.toLowerCase());
+        });
+      }
+
+      const joinedCountMap = {};
+      const processedEnquiryData = [];
+
+      if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
+        const enquiryRows = enquiryResult.data.slice(6);
+
+        enquiryRows.forEach(row => {
+          if (!row[0]) return;
+          const indentNo = (row[1] || '').toString().trim();
+          const candidateEnquiryNo = (row[2] || '').toString().trim();
+          const actualJoining = row[28] || row[27] || '';
+
+          const isJoined = (candidateEnquiryNo && joinedCandidateEnqSet.has(candidateEnquiryNo.toLowerCase())) ||
+            (actualJoining && actualJoining.toString().trim() !== '');
+
+          if (isJoined && indentNo) {
+            joinedCountMap[indentNo.toLowerCase()] = (joinedCountMap[indentNo.toLowerCase()] || 0) + 1;
+          }
+
+          processedEnquiryData.push({
+            id: row[0] || '',
+            indentNo: indentNo,
+            candidateEnquiryNo: candidateEnquiryNo,
+            indentType: row[3] || '',
+            applyingForPost: row[4] || '',
+            department: row[5] || '',
+            candidateName: row[6] || '',
+            candidateDOB: row[7] || '',
+            candidatePhone: row[8] || '',
+            candidateEmail: row[9] || '',
+            previousCompany: row[10] || '',
+            jobExperience: row[11] || '',
+            previousPosition: row[12] || '',
+            reasonOfLeaving: row[13] || '',
+            maritalStatus: row[14] || '',
+            lastSalaryDrawn: row[15] || '',
+            candidatePhoto: row[16] || '',
+            gender: row[17] || '',
+            presentAddress: row[18] || '',
+            aadharNumber: row[19] || '',
+            resumeCopy: row[20] || '',
+            isJoined: isJoined,
+          });
+        });
+      }
 
       if (indentResult.success && indentResult.data && indentResult.data.length >= 7) {
         const headers = indentResult.data[5].map(h => h.trim());
         const dataFromRow7 = indentResult.data.slice(6);
 
-        const getIndex = (headerName) => headers.findIndex(h => h === headerName);
-
-        const processedData = dataFromRow7
-          .filter(row => {
-            const planned2 = row[12]; // Column M
-            const actual2 = row[13];  // Column N
-
-            return planned2 && planned2.trim() !== '' &&
-              (!actual2 || actual2.trim() === '');
-          })
+        const processedIndentData = dataFromRow7
+          .filter(row => row[1] && row[1].trim() !== '')
           .map(row => {
             const getVal = (name, defaultIdx) => {
               const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
               return idx !== -1 ? row[idx] : row[defaultIdx];
             };
-            
+
+            const indentNo = getVal('indent number', 1) || getVal('indent no', 1) || '';
+            const numberOfPostStr = getVal('no. of post', 8) || getVal('number of post', 8) || '0';
+            const numberOfPost = parseInt(numberOfPostStr, 10) || 0;
+            const joinedCount = joinedCountMap[indentNo.toLowerCase()] || 0;
+            const statusRaw = getVal('status', 15) || '';
+            const statusLower = statusRaw.toString().trim().toLowerCase();
+            const storedReason = row[16] || '';
+
+            const isStatusCompleted = statusLower === 'complete' || statusLower === 'completed';
+            const isPostsFilled = numberOfPost > 0 && joinedCount >= numberOfPost;
+            const isHistory = isStatusCompleted || isPostsFilled;
+
+            let historyReason = storedReason;
+            if (isStatusCompleted) {
+              historyReason = "Status changed to Completed";
+            } else if (isPostsFilled) {
+              historyReason = `Required number of candidates joined (Joined: ${joinedCount}/${numberOfPost})`;
+            }
+
             return {
               id: row[0] || '',
-              indentNo: getVal('indent number', 1) || getVal('indent no', 1) || '',
+              indentNo: indentNo,
               indentType: getVal('indent type', 2) || '',
               post: getVal('post', 3) || '',
               gender: getVal('gender', 4) || '',
               department: getVal('department', 5) || '',
               prefer: getVal('prefer', 6) || '',
               experience: getVal('experience', 7) || '',
-              numberOfPost: getVal('no. of post', 8) || getVal('number of post', 8) || '',
+              numberOfPost: numberOfPostStr,
+              numPosts: numberOfPost,
+              joinedCount: joinedCount,
               completionDate: getVal('completion', 9) || '',
               socialSite: getVal('social', 10) || '',
-              status: getVal('status', 15) || '',
+              socialSiteTypes: getVal('social site types', 11) || row[11] || '',
+              status: statusRaw,
               plannedDate: row[12] || '',
               actual: row[13] || '',
+              isHistory: isHistory,
+              historyReason: historyReason,
             };
           });
 
-        setIndentData(processedData);
+        setIndentData(processedIndentData);
 
-        // Fetch ENQUIRY data for history tab
-        const enquiryResponse = await fetch(
-          `${"https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec"}?sheet=ENQUIRY&action=fetch`
-        );
+        // Enrich processedEnquiryData with historyReason from matching indent
+        const enrichedEnquiryData = processedEnquiryData.map(enq => {
+          const matchingIndent = processedIndentData.find(ind => ind.indentNo.toLowerCase() === enq.indentNo.toLowerCase());
+          return {
+            ...enq,
+            historyReason: matchingIndent ? matchingIndent.historyReason : (enq.isJoined ? 'Candidate Joined' : 'Moved to History'),
+            isHistory: matchingIndent ? matchingIndent.isHistory : true,
+          };
+        });
 
-        const enquiryResult = await enquiryResponse.json();
-
-        if (enquiryResult.success && enquiryResult.data && enquiryResult.data.length > 0) {
-          const enquiryRows = enquiryResult.data.slice(6);
-
-          const processedEnquiryData = enquiryRows
-            .filter(row => row[0]) // A: Timestamp
-            .map(row => {
-              const indentNo = row[1] || '';
-              let indentGender = '';
-              
-              const matchingIndentRow = dataFromRow7.find(indRow => indRow[1] === indentNo);
-              if (matchingIndentRow) {
-                indentGender = matchingIndentRow[4] || '';
-              }
-
-              return {
-                id: row[0] || '',
-                indentNo: indentNo,
-                candidateEnquiryNo: row[2] || '',
-                indentType: row[3] || '',
-                applyingForPost: row[4] || '',
-                department: row[5] || '',
-                candidateName: row[6] || '',
-                candidateDOB: row[7] || '',
-                candidatePhone: row[8] || '',
-                candidateEmail: row[9] || '',
-                previousCompany: row[10] || '',
-                jobExperience: row[11] || '',
-                previousPosition: row[12] || '',
-                reasonOfLeaving: row[13] || '',
-                maritalStatus: row[14] || '',
-                lastSalaryDrawn: row[15] || '',
-                candidatePhoto: row[16] || '',
-                gender: row[17] || indentGender,
-                presentAddress: row[18] || '',
-                aadharNumber: row[19] || '',
-                resumeCopy: row[20] || '',
-              };
-            });
-
-          setEnquiryData(processedEnquiryData);
-        }
-
+        setEnquiryData(enrichedEnquiryData);
       } else {
         throw new Error(indentResult.error || 'Not enough rows in INDENT sheet data');
       }
@@ -568,6 +606,7 @@ const FindEnquiry = () => {
             });
 
             // Update Status (Column P = index 16 in 1-based)
+            const targetStatus = (formData.status === 'Complete' || formData.status === 'Completed') ? "Complete" : "NeedMore";
             await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -576,9 +615,34 @@ const FindEnquiry = () => {
                 action: "updateCell",
                 rowIndex: rowIndex.toString(),
                 columnIndex: "16",
-                value: "Complete",
+                value: targetStatus,
               }),
             });
+
+            // Update History Reason (Column Q = index 17 in 1-based) if completed or candidate limit reached
+            const numPosts = parseInt(selectedItem.numberOfPost || '0', 10) || 0;
+            const updatedJoinedCount = (selectedItem.joinedCount || 0) + 1;
+            let computedReason = "";
+
+            if (formData.status === 'Complete' || formData.status === 'Completed') {
+              computedReason = "Status changed to Completed";
+            } else if (numPosts > 0 && updatedJoinedCount >= numPosts) {
+              computedReason = `Required number of candidates joined (Joined: ${updatedJoinedCount}/${numPosts})`;
+            }
+
+            if (computedReason) {
+              await fetch("https://script.google.com/macros/s/AKfycbwGN0L4CqcZdhgie3l94KGGjWHqaL_cHRgwtw1CCUZy6yqpF5lFlFNBbO10dEm7BNK6FQ/exec", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({
+                  sheetName: "INDENT",
+                  action: "updateCell",
+                  rowIndex: rowIndex.toString(),
+                  columnIndex: "17",
+                  value: computedReason,
+                }),
+              });
+            }
           }
         }
         toast.success("Enquiry submitted and INDENT updated successfully!");
@@ -646,13 +710,13 @@ const FindEnquiry = () => {
   };
 
   const filteredPendingData = indentData.filter((item) => {
-    const isAAP = item.indentNo && item.indentNo.startsWith('AAP-');
-    const matchesMilestone = isAAP || (item.plannedDate && !item.actual);
-    if (!matchesMilestone) return false;
+    // Only pending items (remains in Pending until status is Completed OR joined candidates >= required posts)
+    if (item.isHistory) return false;
 
     const matchesSearch =
       item.post?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.department?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDepartment = filterDepartment
       ? item.department === filterDepartment
@@ -672,7 +736,8 @@ const FindEnquiry = () => {
     const matchesSearch =
       item.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.candidateEnquiryNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.indentNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.applyingForPost?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDepartment = filterDepartment
       ? item.department === filterDepartment
@@ -681,7 +746,6 @@ const FindEnquiry = () => {
     let matchesDate = true;
     if (filterDate) {
       const formattedFilterDate = getFormattedDateToMatch(filterDate);
-      // History uses candidateDOB or Timestamp logic potentially, but we'll stick to a primary field or the portal standard
       const formattedItemDate = getFormattedDateToMatchFromSheet(item.candidateDOB);
       matchesDate = formattedItemDate === formattedFilterDate;
     }
@@ -903,6 +967,7 @@ const FindEnquiry = () => {
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Prefer</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Experience</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">No. of Post</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Joined Status</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Completion Date</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Social Site</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Social Site Types</th>
@@ -911,13 +976,13 @@ const FindEnquiry = () => {
                       <tbody className="bg-white divide-y divide-gray-100">
                         {tableLoading ? (
                           <tr>
-                            <td colSpan="12" className="px-4 py-1">
+                            <td colSpan="13" className="px-4 py-1">
                               <LoadingSpinner message="Searching records..." minHeight="300px" />
                             </td>
                           </tr>
                         ) : filteredPendingData.length === 0 ? (
                           <tr>
-                            <td colSpan="12" className="px-4 py-12 text-center text-gray-400 text-xs font-medium">No pending enquiries found.</td>
+                            <td colSpan="13" className="px-4 py-12 text-center text-gray-400 text-xs font-medium">No pending enquiries found.</td>
                           </tr>
                         ) : (
                           currentItems.map((item, index) => (
@@ -938,6 +1003,11 @@ const FindEnquiry = () => {
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.prefer}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.experience}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.numberOfPost}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                <span className="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold border border-amber-200 shadow-sm">
+                                  Joined: {item.joinedCount || 0}/{item.numberOfPost || 0}
+                                </span>
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
                                 {(() => {
                                   const dateStr = item.completionDate;
@@ -1002,9 +1072,12 @@ const FindEnquiry = () => {
 
                           {/* Main Details */}
                           <div className="flex justify-between items-center py-0.5">
-                            <div className="text-sm">
+                            <div className="text-sm flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-gray-900">{item.post}</span>
-                              <span className="text-gray-400 text-[10px] ml-2">({item.numberOfPost} pos)</span>
+                              <span className="text-gray-400 text-[10px]">({item.numberOfPost} pos)</span>
+                              <span className="text-amber-700 bg-amber-50 border border-amber-200 text-[10px] px-1.5 py-0.5 rounded font-bold">
+                                Joined: {item.joinedCount || 0}/{item.numberOfPost || 0}
+                              </span>
                             </div>
                           </div>
 
@@ -1054,6 +1127,7 @@ const FindEnquiry = () => {
                         <tr>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Photo</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Resume</th>
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">History Reason</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Indent No.</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Enq No.</th>
                           <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Candidate Name</th>
@@ -1077,13 +1151,13 @@ const FindEnquiry = () => {
                       <tbody className="bg-white divide-y divide-gray-100">
                         {tableLoading ? (
                           <tr>
-                            <td colSpan="19" className="px-4 py-1">
+                            <td colSpan="20" className="px-4 py-1">
                               <LoadingSpinner message="Retrieving history..." minHeight="300px" />
                             </td>
                           </tr>
                         ) : filteredHistoryData.length === 0 ? (
                           <tr>
-                            <td colSpan="19" className="px-4 py-12 text-center text-gray-400 text-xs font-medium">No enquiry history found.</td>
+                            <td colSpan="20" className="px-4 py-12 text-center text-gray-400 text-xs font-medium">No enquiry history found.</td>
                           </tr>
                         ) : (
                           currentItems.map((item, index) => (
@@ -1097,6 +1171,12 @@ const FindEnquiry = () => {
                                 {item.resumeCopy ? (
                                   <a href={item.resumeCopy} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline">RESUME</a>
                                 ) : <span className="text-gray-300">—</span>}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-center">
+                                <span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-xs font-bold border border-purple-200 inline-flex items-center gap-1 shadow-sm">
+                                  <History size={12} className="text-purple-600 shrink-0" />
+                                  {item.historyReason || "Moved to History"}
+                                </span>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.indentNo}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">{item.candidateEnquiryNo}</td>
@@ -1138,8 +1218,13 @@ const FindEnquiry = () => {
                     ) : (
                       currentItems.map((item, index) => (
                         <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-2.5 space-y-2">
-                          <div className="flex justify-between items-center bg-gray-50 -mx-2.5 -mt-2.5 p-2 px-3 rounded-t-lg border-b border-gray-100 mb-1">
-                            <span className="font-bold text-indigo-600 text-xs tracking-tight">{item.indentNo} / {item.candidateEnquiryNo}</span>
+                          <div className="flex justify-between items-center bg-gray-50 -mx-2.5 -mt-2.5 p-2 px-3 rounded-t-lg border-b border-gray-100 mb-1 flex-wrap gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-indigo-600 text-xs tracking-tight">{item.indentNo} / {item.candidateEnquiryNo}</span>
+                              <span className="bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                                {item.historyReason || "Moved to History"}
+                              </span>
+                            </div>
                             <span className="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">{item.department}</span>
                           </div>
 

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 import { fetchMasterCompanies, evaluateLocationMatch } from "../../utils/locationMatcher";
 
 const AttendanceDaily = () => {
@@ -526,6 +527,31 @@ const AttendanceDaily = () => {
     return matchesSearch && matchesName && matchesDate;
   });
 
+  const handleExport = () => {
+    if (filteredData.length === 0) {
+      toast.error("No records to export");
+      return;
+    }
+
+    const exportRows = filteredData.map(item => ({
+      "Employee Name": item.name,
+      "Employee ID": item.empId,
+      "Date": item.date,
+      "In-Time": item.inTime,
+      "Out-Time": item.outTime,
+      "Working Hours": item.workingHours,
+      "Late (mins)": item.lateMins,
+      "Status": item.status,
+      "Location Match": item.locationStatus || "Location Not Matched"
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+    XLSX.writeFile(workbook, `Attendance_Log_${filterDate || "All"}.xlsx`);
+    toast.success("Attendance exported successfully!");
+  };
+
   const departments = [...new Set(attendanceData.map(d => d.department))].sort();
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -630,6 +656,15 @@ const AttendanceDaily = () => {
               className="flex items-center justify-center gap-2 h-8 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-95"
             >
               <span>Attendance</span>
+            </button>
+
+            {/* Export Button */}
+            <button
+              onClick={handleExport}
+              className="flex items-center justify-center gap-2 h-8 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold uppercase tracking-wider shadow-sm transition-all duration-200 ease-in-out hover:shadow-md active:scale-95"
+            >
+              <Download size={12} />
+              <span>Export</span>
             </button>
           </div>
         </div>
