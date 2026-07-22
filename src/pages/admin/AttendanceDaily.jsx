@@ -16,7 +16,12 @@ const AttendanceDaily = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("");
   const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
-  const [filterDate, setFilterDate] = useState(() => {
+  const [fromDate, setFromDate] = useState(() => {
+    const today = new Date();
+    const pad = (num) => String(num).padStart(2, '0');
+    return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  });
+  const [toDate, setToDate] = useState(() => {
     const today = new Date();
     const pad = (num) => String(num).padStart(2, '0');
     return `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
@@ -504,26 +509,41 @@ const AttendanceDaily = () => {
     
     const matchesName = !filterDepartment || item.name === filterDepartment;
     
-    // Normalize date for comparison (Handles DD/MM/YYYY vs YYYY-MM-DD and locale variations)
-    const matchesDate = !filterDate || (() => {
+    // Normalize date for comparison (Handles DD/MM/YYYY vs YYYY-MM-DD range filter)
+    const matchesDate = (() => {
+      if (!fromDate && !toDate) return true;
       if (!item.date || item.date === 'N/A') return false;
-      
-      // Convert filterDate (YYYY-MM-DD) to integers
-      const [fYear, fMonth, fDay] = filterDate.split('-').map(Number);
-      
-      // Split item.date (Supports / or - as separators)
+
+      // Split item.date (Supports / or - as separators: DD/MM/YYYY or YYYY-MM-DD)
       const dateParts = item.date.split(/[\/\-]/).map(Number);
       if (dateParts.length !== 3) return false;
-      
-      const [p1, p2, p3] = dateParts;
-      
-      // Try both D/M/Y and M/D/Y orders
-      const isDMY = p1 === fDay && p2 === fMonth && p3 === fYear;
-      const isMDY = p1 === fMonth && p2 === fDay && p3 === fYear;
-      
-      return isDMY || isMDY;
+
+      let d, m, y;
+      if (dateParts[0] > 1000) {
+        [y, m, d] = dateParts;
+      } else if (dateParts[2] > 1000) {
+        [d, m, y] = dateParts;
+      } else {
+        [d, m, y] = dateParts;
+      }
+
+      const itemD = new Date(y, m - 1, d);
+
+      if (fromDate) {
+        const [fY, fM, fD] = fromDate.split('-').map(Number);
+        const startD = new Date(fY, fM - 1, fD);
+        if (itemD < startD) return false;
+      }
+
+      if (toDate) {
+        const [tY, tM, tD] = toDate.split('-').map(Number);
+        const endD = new Date(tY, tM - 1, tD, 23, 59, 59);
+        if (itemD > endD) return false;
+      }
+
+      return true;
     })();
-    
+
     return matchesSearch && matchesName && matchesDate;
   });
 
@@ -548,7 +568,7 @@ const AttendanceDaily = () => {
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
-    XLSX.writeFile(workbook, `Attendance_Log_${filterDate || "All"}.xlsx`);
+    XLSX.writeFile(workbook, `Attendance_Log_${fromDate || "Start"}_to_${toDate || "End"}.xlsx`);
     toast.success("Attendance exported successfully!");
   };
 
@@ -624,11 +644,38 @@ const AttendanceDaily = () => {
               )}
             </div>
 
-            {/* Date Picker */}
+            {/* From Date */}
             <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
-              <Calendar size={11} className="text-gray-400" />
-              <input type="date" value={filterDate} onChange={(e) => { setFilterDate(e.target.value); setCurrentPage(1); }} className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer" />
+              <span className="text-[9px] font-bold text-gray-400 uppercase">From:</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
+                className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer"
+              />
             </div>
+
+            {/* To Date */}
+            <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
+              <span className="text-[9px] font-bold text-gray-400 uppercase">To:</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
+                className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer"
+              />
+            </div>
+
+            {(fromDate || toDate) && (
+              <button
+                onClick={() => { setFromDate(""); setToDate(""); setCurrentPage(1); }}
+                className="px-2 h-8 bg-rose-50 text-rose-600 border border-rose-200 rounded text-[10px] font-bold hover:bg-rose-100 transition shadow-sm flex items-center gap-1 shrink-0"
+                title="Clear date range filter"
+              >
+                <XCircle size={12} />
+                <span>Clear</span>
+              </button>
+            )}
 
             {/* Attendance Button */}
             <button

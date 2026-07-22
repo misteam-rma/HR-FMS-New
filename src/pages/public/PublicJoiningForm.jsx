@@ -201,7 +201,33 @@ const PublicJoiningForm = () => {
     if (submitting) return;
 
     if (!formData.nameAsPerAadhar || !formData.mobileNo || !formData.dateOfJoining) {
-      toast.error("Please fill in all mandatory fields (*)");
+      toast.error("Please fill in all mandatory basic details (*)");
+      return;
+    }
+
+    if (!formData.bankName || !formData.currentBankAc || !formData.ifscCode) {
+      toast.error("Bank Account Details (Bank Name, Account Number, IFSC Code) are mandatory (*)");
+      return;
+    }
+
+    const hasPhoto = formData.candidatePhoto || candidateData?.candidatePhoto;
+    if (!hasPhoto) {
+      toast.error("Passport size photo is mandatory (*)");
+      return;
+    }
+
+    if (!formData.aadharFrontPhoto) {
+      toast.error("Aadhar card photo is mandatory (*)");
+      return;
+    }
+
+    if (!formData.bankPassbookPhoto) {
+      toast.error("Bank passbook / cheque photo is mandatory (*)");
+      return;
+    }
+
+    if (!formData.panCardPhoto) {
+      toast.error("Valid PAN card proof is mandatory (*)");
       return;
     }
 
@@ -645,40 +671,43 @@ const PublicJoiningForm = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
               <CreditCard className="text-emerald-500" size={18} />
-              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">3. Bank Account Information</h3>
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">3. Bank Account Information*</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Bank Name</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Bank Name*</label>
                 <input
                   type="text"
                   name="bankName"
                   value={formData.bankName}
                   onChange={handleInputChange}
+                  required
                   placeholder="e.g. HDFC Bank, SBI"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">Bank Account Number</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Bank Account Number*</label>
                 <input
                   type="text"
                   name="currentBankAc"
                   value={formData.currentBankAc}
                   onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">IFSC Code</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">IFSC Code*</label>
                 <input
                   type="text"
                   name="ifscCode"
                   value={formData.ifscCode}
                   onChange={handleInputChange}
+                  required
                   placeholder="e.g. SBIN0001234"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none font-mono uppercase"
                 />
@@ -695,8 +724,8 @@ const PublicJoiningForm = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               
-              <div className="border border-dashed border-slate-200 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50 transition-all">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Passport Size Photo</label>
+              <div className="border border-dashed border-emerald-200 rounded-2xl p-3 bg-emerald-50/20 hover:bg-emerald-50/40 transition-all">
+                <label className="block text-[10px] font-bold text-emerald-700 uppercase mb-1">Passport Size Photo*</label>
                 <label className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-500 transition-all">
                   <Upload size={14} className="text-emerald-600 shrink-0" />
                   <span className="text-xs text-slate-600 truncate">{formData.candidatePhoto?.name || 'Choose photo...'}</span>
@@ -704,8 +733,8 @@ const PublicJoiningForm = () => {
                 </label>
               </div>
 
-              <div className="border border-dashed border-slate-200 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50 transition-all">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Aadhar Card Photo</label>
+              <div className="border border-dashed border-emerald-200 rounded-2xl p-3 bg-emerald-50/20 hover:bg-emerald-50/40 transition-all">
+                <label className="block text-[10px] font-bold text-emerald-700 uppercase mb-1">Aadhar Card Photo*</label>
                 <label className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-500 transition-all">
                   <Upload size={14} className="text-emerald-600 shrink-0" />
                   <span className="text-xs text-slate-600 truncate">{formData.aadharFrontPhoto?.name || 'Choose file...'}</span>
@@ -713,8 +742,8 @@ const PublicJoiningForm = () => {
                 </label>
               </div>
 
-              <div className="border border-dashed border-slate-200 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50 transition-all">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Bank Passbook / Cheque</label>
+              <div className="border border-dashed border-emerald-200 rounded-2xl p-3 bg-emerald-50/20 hover:bg-emerald-50/40 transition-all">
+                <label className="block text-[10px] font-bold text-emerald-700 uppercase mb-1">Bank Passbook / Cheque*</label>
                 <label className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-500 transition-all">
                   <Upload size={14} className="text-emerald-600 shrink-0" />
                   <span className="text-xs text-slate-600 truncate">{formData.bankPassbookPhoto?.name || 'Choose file...'}</span>
@@ -722,8 +751,8 @@ const PublicJoiningForm = () => {
                 </label>
               </div>
 
-              <div className="border border-dashed border-slate-200 rounded-2xl p-3 bg-slate-50/50 hover:bg-slate-50 transition-all">
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Valid PAN Card Proof</label>
+              <div className="border border-dashed border-emerald-200 rounded-2xl p-3 bg-emerald-50/20 hover:bg-emerald-50/40 transition-all">
+                <label className="block text-[10px] font-bold text-emerald-700 uppercase mb-1">Valid PAN Card Proof*</label>
                 <label className="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-emerald-500 transition-all">
                   <Upload size={14} className="text-emerald-600 shrink-0" />
                   <span className="text-xs text-slate-600 truncate">{formData.panCardPhoto?.name || 'Choose file...'}</span>

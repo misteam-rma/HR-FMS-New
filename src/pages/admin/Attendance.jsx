@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Search, Users, Calendar, Filter, Clock, CheckCircle2, 
   XCircle, AlertCircle, ChevronRight, FileText, ChevronDown, 
@@ -16,6 +16,8 @@ const Attendance = () => {
   const [filterDepartment, setFilterDepartment] = useState("");
   const [isDeptDropdownOpen, setIsDeptDropdownOpen] = useState(false);
   const [filterMonth, setFilterMonth] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [tableLoading, setTableLoading] = useState(false);
@@ -82,13 +84,57 @@ const Attendance = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeTab, filterMonth, searchTerm, filterDepartment]);
+  }, [activeTab, filterMonth, fromDate, toDate, searchTerm, filterDepartment]);
+
+  const MONTH_MAP = {
+    january: 0, jan: 0, '1': 0, '01': 0,
+    february: 1, feb: 1, '2': 1, '02': 1,
+    march: 2, mar: 2, '3': 2, '03': 2,
+    april: 3, apr: 3, '4': 3, '04': 3,
+    may: 4, '5': 4, '05': 4,
+    june: 5, jun: 5, '6': 5, '06': 5,
+    july: 6, jul: 6, '7': 6, '07': 6,
+    august: 7, aug: 7, '8': 7, '08': 7,
+    september: 8, sep: 8, '9': 8, '09': 8,
+    october: 9, oct: 9, '10': 9,
+    november: 10, nov: 10, '11': 10,
+    december: 11, dec: 11, '12': 11
+  };
 
   const filteredData = attendanceData.filter(item => {
     const matchesSearch = !searchTerm || item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.empId.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesName = !filterDepartment || item.name === filterDepartment;
-    const matchesMonth = !filterMonth || item.month === filterMonth;
-    return matchesSearch && matchesName && matchesMonth;
+    const matchesMonth = !filterMonth || item.month.toLowerCase() === filterMonth.toLowerCase();
+
+    // From - To date range filtering
+    const matchesDateRange = (() => {
+      if (!fromDate && !toDate) return true;
+
+      let itemYear = parseInt(item.year, 10) || new Date().getFullYear();
+      let itemMonthIdx = MONTH_MAP[item.month?.toString().toLowerCase()] !== undefined
+        ? MONTH_MAP[item.month?.toString().toLowerCase()]
+        : 0;
+
+      // Start & end of the month for this report entry
+      const monthStart = new Date(itemYear, itemMonthIdx, 1);
+      const monthEnd = new Date(itemYear, itemMonthIdx + 1, 0, 23, 59, 59);
+
+      if (fromDate) {
+        const [fY, fM, fD] = fromDate.split('-').map(Number);
+        const filterFrom = new Date(fY, fM - 1, fD);
+        if (monthEnd < filterFrom) return false;
+      }
+
+      if (toDate) {
+        const [tY, tM, tD] = toDate.split('-').map(Number);
+        const filterTo = new Date(tY, tM - 1, tD, 23, 59, 59);
+        if (monthStart > filterTo) return false;
+      }
+
+      return true;
+    })();
+
+    return matchesSearch && matchesName && matchesMonth && matchesDateRange;
   });
 
   const handleExport = () => {
@@ -109,7 +155,7 @@ const Attendance = () => {
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Monthly Attendance");
-    XLSX.writeFile(workbook, `Monthly_Attendance_${filterMonth || "All"}.xlsx`);
+    XLSX.writeFile(workbook, `Monthly_Attendance_${fromDate || "Start"}_to_${toDate || "End"}.xlsx`);
     toast.success("Attendance exported successfully!");
   };
 
@@ -185,6 +231,28 @@ const Attendance = () => {
                )}
              </div>
 
+             {/* From Date */}
+             <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
+               <span className="text-[9px] font-bold text-gray-400 uppercase">From:</span>
+               <input
+                 type="date"
+                 value={fromDate}
+                 onChange={(e) => { setFromDate(e.target.value); setCurrentPage(1); }}
+                 className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer"
+               />
+             </div>
+
+             {/* To Date */}
+             <div className="flex items-center gap-1 h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-600 shadow-sm relative">
+               <span className="text-[9px] font-bold text-gray-400 uppercase">To:</span>
+               <input
+                 type="date"
+                 value={toDate}
+                 onChange={(e) => { setToDate(e.target.value); setCurrentPage(1); }}
+                 className="bg-transparent focus:outline-none text-[10px] w-24 cursor-pointer"
+               />
+             </div>
+
              {/* Select Month */}
              <select 
                 value={filterMonth} 
@@ -192,10 +260,21 @@ const Attendance = () => {
                 className="h-8 px-2 border border-gray-200 rounded bg-white text-[11px] text-gray-700 font-medium outline-none shadow-sm hover:border-indigo-400 transition"
              >
                 <option value="">All Months</option>
-                {["January", "February", "March", "April", "May", "June", "July"].map(m => (
+                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
                   <option key={m} value={m}>{m.toUpperCase()}</option>
                 ))}
              </select>
+
+             {(fromDate || toDate || filterMonth) && (
+               <button
+                 onClick={() => { setFromDate(""); setToDate(""); setFilterMonth(""); setCurrentPage(1); }}
+                 className="px-2 h-8 bg-rose-50 text-rose-600 border border-rose-200 rounded text-[10px] font-bold hover:bg-rose-100 transition shadow-sm flex items-center gap-1 shrink-0"
+                 title="Clear date and month filters"
+               >
+                 <XCircle size={12} />
+                 <span>Clear</span>
+               </button>
+             )}
 
              {/* Export Button */}
              <button

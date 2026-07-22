@@ -380,6 +380,33 @@ const Joining = () => {
   const handleJoiningSubmit = async (e) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (!joiningFormData.bankName || !joiningFormData.currentBankAc || !joiningFormData.ifscCode) {
+      toast.error("Bank Account Details (Bank Name, Account Number, IFSC Code) are mandatory (*)");
+      return;
+    }
+
+    const hasPhoto = joiningFormData.candidatePhoto || selectedItem?.candidatePhoto;
+    if (!hasPhoto) {
+      toast.error("Candidate photo is mandatory (*)");
+      return;
+    }
+
+    if (!joiningFormData.aadharFrontPhoto) {
+      toast.error("Aadhar card photo is mandatory (*)");
+      return;
+    }
+
+    if (!joiningFormData.bankPassbookPhoto) {
+      toast.error("Bank passbook / cheque photo is mandatory (*)");
+      return;
+    }
+
+    if (!joiningFormData.panCardPhoto) {
+      toast.error("Valid PAN card proof is mandatory (*)");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -1208,27 +1235,27 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
 
               {/* Financial Information */}
               <div className="space-y-3">
-                <h4 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest pl-1 border-l-4 border-blue-600">Financial Information</h4>
+                <h4 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest pl-1 border-l-4 border-blue-600">Financial Information*</h4>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Current Bank A.C No.</label>
-                    <input type="text" value={joiningFormData.currentBankAc} onChange={(e) => setJoiningFormData({ ...joiningFormData, currentBankAc: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Current Bank A.C No.*</label>
+                    <input type="text" required value={joiningFormData.currentBankAc} onChange={(e) => setJoiningFormData({ ...joiningFormData, currentBankAc: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">IFSC Code</label>
-                    <input type="text" value={joiningFormData.ifscCode} onChange={(e) => setJoiningFormData({ ...joiningFormData, ifscCode: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">IFSC Code*</label>
+                    <input type="text" required value={joiningFormData.ifscCode} onChange={(e) => setJoiningFormData({ ...joiningFormData, ifscCode: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-500 uppercase">Branch Name</label>
                     <input type="text" value={joiningFormData.branchName} onChange={(e) => setJoiningFormData({ ...joiningFormData, branchName: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Aadhar Card No.</label>
-                    <input type="text" value={joiningFormData.aadharCardNo} onChange={(e) => setJoiningFormData({ ...joiningFormData, aadharCardNo: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Aadhar Card No.*</label>
+                    <input type="text" required value={joiningFormData.aadharCardNo} onChange={(e) => setJoiningFormData({ ...joiningFormData, aadharCardNo: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Name of the Bank</label>
-                    <input type="text" value={joiningFormData.bankName} onChange={(e) => setJoiningFormData({ ...joiningFormData, bankName: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Name of the Bank*</label>
+                    <input type="text" required value={joiningFormData.bankName} onChange={(e) => setJoiningFormData({ ...joiningFormData, bankName: e.target.value })} className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all" />
                   </div>
                 </div>
               </div>
@@ -1238,27 +1265,35 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                 <h4 className="text-[11px] font-bold text-blue-600 uppercase tracking-widest pl-1 border-l-4 border-blue-600">Document Uploads</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Aadhar Frontside Photo</label>
-                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                      <Upload size={14} className="text-slate-400" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Aadhar Frontside Photo*</label>
+                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/20 hover:bg-blue-50/50 transition-colors cursor-pointer">
+                      <Upload size={14} className="text-blue-500" />
                       <span className="text-[11px] text-slate-600 truncate">{joiningFormData.aadharFrontPhoto?.name || 'Choose file...'}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, aadharFrontPhoto: e.target.files[0] })} />
                     </label>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Candidate's Photo</label>
-                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                      <Upload size={14} className="text-slate-400" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Candidate's Photo*</label>
+                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/20 hover:bg-blue-50/50 transition-colors cursor-pointer">
+                      <Upload size={14} className="text-blue-500" />
                       <span className="text-[11px] text-slate-600 truncate">{joiningFormData.candidatePhoto?.name || 'Choose file...'}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, candidatePhoto: e.target.files[0] })} />
                     </label>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Bank Passbook Photo</label>
-                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                      <Upload size={14} className="text-slate-400" />
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Bank Passbook Photo*</label>
+                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/20 hover:bg-blue-50/50 transition-colors cursor-pointer">
+                      <Upload size={14} className="text-blue-500" />
                       <span className="text-[11px] text-slate-600 truncate">{joiningFormData.bankPassbookPhoto?.name || 'Choose file...'}</span>
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, bankPassbookPhoto: e.target.files[0] })} />
+                    </label>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Valid PAN Identity Proof*</label>
+                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/20 hover:bg-blue-50/50 transition-colors cursor-pointer">
+                      <Upload size={14} className="text-blue-500" />
+                      <span className="text-[11px] text-slate-600 truncate">{joiningFormData.panCardPhoto?.name || 'Choose file...'}</span>
+                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, panCardPhoto: e.target.files[0] })} />
                     </label>
                   </div>
                   <div className="space-y-1">
@@ -1275,14 +1310,6 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                       <Upload size={14} className="text-slate-400" />
                       <span className="text-[11px] text-slate-600 truncate">{joiningFormData.resumeCopyFile?.name || 'Choose file...'}</span>
                       <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, resumeCopyFile: e.target.files[0] })} />
-                    </label>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase">Valid PAN Identity Proof</label>
-                    <label className="flex items-center gap-2 p-2 border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
-                      <Upload size={14} className="text-slate-400" />
-                      <span className="text-[11px] text-slate-600 truncate">{joiningFormData.panCardPhoto?.name || 'Choose file...'}</span>
-                      <input type="file" accept="image/*,application/pdf" className="hidden" onChange={(e) => setJoiningFormData({ ...joiningFormData, panCardPhoto: e.target.files[0] })} />
                     </label>
                   </div>
                 </div>
