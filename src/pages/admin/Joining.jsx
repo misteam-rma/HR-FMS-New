@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Clock, CheckCircle, X, Upload, Share, FileText, Mail, Calendar, Filter, ChevronDown, Check, History } from 'lucide-react';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -646,11 +646,12 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
 
   const handleShareClick = (item) => {
     setSelectedItem(item);
+    const joinLink = `${window.location.origin}/joining-form?enquiry=${encodeURIComponent(item.candidateEnquiryNo)}`;
     setShareFormData({
       recipientName: item.candidateName || '',
       recipientEmail: item.candidateEmail || '',
-      subject: `Onboarding: ${item.candidateName}`,
-      message: `Dear ${item.candidateName},\n\nWelcome to the team! Please complete your onboarding details using the link below.`
+      subject: `Onboarding & Joining Form: ${item.candidateName}`,
+      message: `Dear ${item.candidateName || 'Candidate'},\n\nWelcome to the team! Please fill and submit your joining registration details using the link below:\n\nJoining Form Link:\n${joinLink}\n\nOnce submitted, your onboarding registration will be automatically processed.\n\nBest Regards,\nHR Team`
     });
     setShowShareModal(true);
   };
@@ -1352,8 +1353,22 @@ const timestamp = `${pad(now.getDate())}/${pad(now.getMonth() + 1)}/${now.getFul
                 <textarea
                   rows={4}
                   value={shareFormData.message}
+                  onChange={(e) => setShareFormData(prev => ({ ...prev, message: e.target.value }))}
                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Attached Form Link</label>
+                <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl text-xs flex items-center justify-between gap-2">
+                  <a
+                    href={`${window.location.origin}/joining-form?enquiry=${encodeURIComponent(selectedItem.candidateEnquiryNo)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-700 font-medium hover:underline truncate flex-1"
+                  >
+                    {`${window.location.origin}/joining-form?enquiry=${selectedItem.candidateEnquiryNo}`}
+                  </a>
+                </div>
               </div>
             </div>
 

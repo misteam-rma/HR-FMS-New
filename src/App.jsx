@@ -33,6 +33,7 @@ import GatePassRequest from './pages/GatePassRequest';
 import VisitorApproval from './pages/admin/VisitorApproval';
 import CloseGatePass from './pages/admin/CloseGatePass';
 import VisitorEntry from './pages/admin/VisitorEntry';
+import PublicJoiningForm from './pages/public/PublicJoiningForm';
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/visitor-form" element={<div className="p-6 bg-slate-50 min-h-screen flex items-center justify-center"><VisitorEntry isPublic={true} /></div>} />
+          <Route path="/joining-form" element={<PublicJoiningForm />} />
 
 
           
